@@ -20,8 +20,12 @@
 
 #define MSM_VDEC_DVC_NAME "msm_vdec_8974"
 #define MIN_NUM_OUTPUT_BUFFERS 4
+<<<<<<< HEAD
 #define MAX_NUM_OUTPUT_BUFFERS VIDEO_MAX_FRAME
 #define MIN_NUM_CAPTURE_BUFFERS 6
+=======
+#define MAX_NUM_OUTPUT_BUFFERS VB2_MAX_FRAME
+>>>>>>> cb42789... msm: vidc: Increase max buffers to VB2_MAX_FRAME (i.e. 64)
 #define DEFAULT_VIDEO_CONCEAL_COLOR_BLACK 0x8080
 #define MB_SIZE_IN_PIXEL (16 * 16)
 
