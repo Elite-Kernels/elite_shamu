@@ -19,15 +19,11 @@
 #define F2FS_MAX_LOG_SECTOR_SIZE	12	/* 12 bits for 4096 bytes */
 #define F2FS_LOG_SECTORS_PER_BLOCK	3	/* log number for sector/blk */
 #define F2FS_BLKSIZE			4096	/* support only 4KB block */
-#define F2FS_BLKSIZE_BITS		12	/* bits for F2FS_BLKSIZE */
 #define F2FS_MAX_EXTENSION		64	/* # of extension entries */
 #define F2FS_BLK_ALIGN(x)	(((x) + F2FS_BLKSIZE - 1) / F2FS_BLKSIZE)
 
 #define NULL_ADDR		((block_t)0)	/* used as block_t addresses */
 #define NEW_ADDR		((block_t)-1)	/* used as block_t addresses */
-
-#define F2FS_BYTES_TO_BLK(bytes)	((bytes) >> F2FS_BLKSIZE_BITS)
-#define F2FS_BLK_TO_BYTES(blk)		((blk) << F2FS_BLKSIZE_BITS)
 
 /* 0, 1(node nid), 2(meta nid) are reserved node id */
 #define F2FS_RESERVED_NODE_NUM		3
@@ -49,8 +45,6 @@
 #define MAX_ACTIVE_LOGS	16
 #define MAX_ACTIVE_NODE_LOGS	8
 #define MAX_ACTIVE_DATA_LOGS	8
-
-#define VERSION_LEN	256
 
 /*
  * For superblock
@@ -88,18 +82,11 @@ struct f2fs_super_block {
 	__le32 extension_count;		/* # of extensions below */
 	__u8 extension_list[F2FS_MAX_EXTENSION][8];	/* extension array */
 	__le32 cp_payload;
-	__u8 version[VERSION_LEN];	/* the kernel version */
-	__u8 init_version[VERSION_LEN];	/* the initial kernel version */
-	__le32 feature;			/* defined features */
-	__u8 encryption_level;		/* versioning level for encryption */
-	__u8 encrypt_pw_salt[16];	/* Salt used for string2key algorithm */
-	__u8 reserved[871];		/* valid reserved region */
 } __packed;
 
 /*
  * For checkpoint
  */
-#define CP_FASTBOOT_FLAG	0x00000020
 #define CP_FSCK_FLAG		0x00000010
 #define CP_ERROR_FLAG		0x00000008
 #define CP_COMPACT_SUM_FLAG	0x00000004
@@ -161,7 +148,7 @@ struct f2fs_orphan_block {
  */
 struct f2fs_extent {
 	__le32 fofs;		/* start file offset of the extent */
-	__le32 blk;		/* start block address of the extent */
+	__le32 blk_addr;	/* start block address of the extent */
 	__le32 len;		/* lengh of the extent */
 } __packed;
 
@@ -186,7 +173,6 @@ struct f2fs_extent {
 #define F2FS_INLINE_DATA	0x02	/* file inline data flag */
 #define F2FS_INLINE_DENTRY	0x04	/* file inline dentry flag */
 #define F2FS_DATA_EXIST		0x08	/* file inline data exist flag */
-#define F2FS_INLINE_DOTS	0x10	/* file having implicit dot dentries */
 
 #define MAX_INLINE_DATA		(sizeof(__le32) * (DEF_ADDRS_PER_INODE - \
 						F2FS_INLINE_XATTR_ADDRS - 1))
@@ -237,8 +223,6 @@ enum {
 	DENT_BIT_SHIFT,
 	OFFSET_BIT_SHIFT
 };
-
-#define OFFSET_BIT_MASK		(0x07)	/* (0x01 << OFFSET_BIT_SHIFT) - 1 */
 
 struct node_footer {
 	__le32 nid;		/* node id */
