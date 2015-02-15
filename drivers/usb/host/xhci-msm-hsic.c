@@ -693,7 +693,8 @@ static irqreturn_t mxhci_hsic_wakeup_irq(int irq, void *data)
 			mxhci->wakeup_int_cnt);
 
 	if (wl_divide == 1) pm_stay_awake(mxhci->dev);
-	else pm_wakeup_event(mxhci->dev, WL_TIMEOUT/wl_divide);
+	else if (wl_divide > 1) pm_wakeup_event(mxhci->dev, 
+		WL_TIMEOUT/wl_divide);
 
 	spin_lock(&mxhci->wakeup_lock);
 	if (mxhci->wakeup_irq_enabled) {
@@ -929,7 +930,7 @@ static int mxhci_hsic_suspend(struct mxhci_hsic_hcd *mxhci)
 	/* disable force-on mode for periph_on */
 	clk_set_flags(mxhci->system_clk, CLKFLAG_NORETAIN_PERIPH);
 
-	pm_relax(mxhci->dev);
+	if (wl_divide > 0) pm_relax(mxhci->dev);
 
 	dev_dbg(mxhci->dev, "HSIC-USB in low power mode\n");
 	xhci_dbg_log_event(&dbg_hsic, NULL, "Controller suspended", 0);
@@ -949,7 +950,8 @@ static int mxhci_hsic_resume(struct mxhci_hsic_hcd *mxhci)
 	}
 
 	if (wl_divide == 1) pm_stay_awake(mxhci->dev);
-	else pm_wakeup_event(mxhci->dev, WL_TIMEOUT/wl_divide);
+	else if (wl_divide > 1) pm_wakeup_event(mxhci->dev, 
+		WL_TIMEOUT/wl_divide);
 
 	/* enable force-on mode for periph_on */
 	clk_set_flags(mxhci->system_clk, CLKFLAG_RETAIN_PERIPH);
@@ -1536,7 +1538,8 @@ static int mxhci_hsic_probe(struct platform_device *pdev)
 
 	device_init_wakeup(&pdev->dev, 1);
 	if (wl_divide == 1) pm_stay_awake(mxhci->dev);
-	else pm_wakeup_event(mxhci->dev, WL_TIMEOUT/wl_divide);
+	else if (wl_divide > 1) pm_wakeup_event(mxhci->dev, 
+		WL_TIMEOUT/wl_divide);
 
 	pm_runtime_set_active(&pdev->dev);
 	pm_runtime_enable(&pdev->dev);
