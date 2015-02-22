@@ -1,0 +1,5 @@
+ui_print("Installing Elite Shamu Kernel");
+show_progress(0.100000, 0);
+package_extract_file("boot.img", "/dev/block/platform/msm_sdcc.1/by-name/boot");
+ui_print("Kernel Installed");
+set_progress(1.000000);
