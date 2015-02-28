@@ -24,8 +24,6 @@
 
 chmod 666 /sys/block/mmcblk0/queue/scheduler
 chmod 666 /sys/block/mmcblk0/queue/read_ahead_kb
-chmod 666 /sys/block/mmcblk1/queue/scheduler
-chmod 666 /sys/block/mmcblk1/queue/read_ahead_kb
 chmod 666 /sys/module/cpu_boost/parameters/boost_ms
 chmod 666 /sys/module/cpu_boost/parameters/sync_threshold
 chmod 666 /sys/module/cpu_boost/parameters/input_boost_freq 
@@ -33,8 +31,6 @@ chmod 666 /sys/module/cpu_boost/parameters/input_boost_ms
   
 echo "fiops" > /sys/block/mmcblk0/queue/scheduler
 echo "1024" > /sys/block/mmcblk0/queue/read_ahead_kb
-echo "fiops" > /sys/block/mmcblk1/queue/scheduler
-echo "1024" > /sys/block/mmcblk1/queue/read_ahead_kb
 echo 1 > /sys/module/cpu_boost/parameters/cpuboost_enable
 echo 20 > /sys/module/cpu_boost/parameters/boost_ms 
 echo 2265600 > /sys/module/cpu_boost/parameters/sync_threshold 
@@ -43,8 +39,6 @@ echo 20 > /sys/module/cpu_boost/parameters/input_boost_ms
 
 chmod 644 /sys/block/mmcblk0/queue/scheduler
 chmod 644 /sys/block/mmcblk0/queue/read_ahead_kb
-chmod 644 /sys/block/mmcblk1/queue/scheduler
-chmod 644 /sys/block/mmcblk1/queue/read_ahead_kb
 chmod 644 /sys/module/cpu_boost/parameters/boost_ms
 chmod 644 /sys/module/cpu_boost/parameters/sync_threshold
 chmod 644 /sys/module/cpu_boost/parameters/input_boost_freq 
