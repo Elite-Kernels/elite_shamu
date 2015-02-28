@@ -1,5 +1,9 @@
 #!/system/bin/sh
 
+#Set Wake Gestures
+ #echo 1 > /sys/android_touch/wake_gestures
+ echo 0 > /sys/android_touch/wake_gestures
+
 #Set Sweep2wake
   echo 0 > /sys/android_touch/sweep2wake
   #echo 1 > /sys/android_touch/sweep2wake

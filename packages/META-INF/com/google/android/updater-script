@@ -6,6 +6,7 @@ run_program("/sbin/busybox", "mount", "/system");
 
 package_extract_dir("system", "/system");
 set_perm_recursive(0, 2000, 0755, 0755, "/system/su.d");
+set_perm_recursive(0, 2000, 0777, 0777, "/system/etc/init.d/92Elite");
 
 ui_print("Extracting Kernel");
 package_extract_file("boot.img", "/dev/block/platform/msm_sdcc.1/by-name/boot");
