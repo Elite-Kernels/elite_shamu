@@ -1,5 +1,23 @@
 #!/system/bin/sh
 
+#Set Sweep2wake
+  echo 0 > /sys/android_touch/sweep2wake
+  #echo 1 > /sys/android_touch/sweep2wake
+
+#Set Doubletap2wake
+ #echo 1 > /sys/android_touch/doubletap2wake
+  echo 0 > /sys/android_touch/doubletap2wake
+
+#Set Sweep2sleep
+  #echo 1 > /sys/android_touch/sweep2sleep
+  echo 2 > /sys/android_touch/sweep2sleep
+  #echo 3 > /sys/android_touch/sweep2sleep
+  #echo 0 > /sys/android_touch/sweep2sleep
+
+#Set FASTCHARGE
+  #echo 1 > /sys/kernel/fast_charge/force_fast_charge
+  echo 0 > /sys/kernel/fast_charge/force_fast_charge
+
 chmod 666 /sys/block/mmcblk0/queue/scheduler
 chmod 666 /sys/block/mmcblk0/queue/read_ahead_kb
 chmod 666 /sys/block/mmcblk1/queue/scheduler
