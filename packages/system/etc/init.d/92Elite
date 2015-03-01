@@ -1,5 +1,16 @@
 #!/system/bin/sh
 
+chmod 666 /sys/block/mmcblk0/queue/scheduler
+chmod 666 /sys/block/mmcblk0/queue/read_ahead_kb
+chmod 666 /sys/module/cpu_boost/parameters/boost_ms
+chmod 666 /sys/module/cpu_boost/parameters/sync_threshold
+chmod 666 /sys/module/cpu_boost/parameters/input_boost_freq 
+chmod 666 /sys/module/cpu_boost/parameters/input_boost_ms
+chmod 666 /sys/android_touch/wake_gestures  
+chmod 666 /sys/android_touch/sweep2wake 
+chmod 666 /sys/android_touch/doubletap2wake  
+chmod 666 /sys/android_touch/sweep2sleep
+  
 #Set Wake Gestures
  #echo 1 > /sys/android_touch/wake_gestures
  echo 0 > /sys/android_touch/wake_gestures
@@ -22,13 +33,6 @@
   #echo 1 > /sys/kernel/fast_charge/force_fast_charge
   echo 0 > /sys/kernel/fast_charge/force_fast_charge
 
-chmod 666 /sys/block/mmcblk0/queue/scheduler
-chmod 666 /sys/block/mmcblk0/queue/read_ahead_kb
-chmod 666 /sys/module/cpu_boost/parameters/boost_ms
-chmod 666 /sys/module/cpu_boost/parameters/sync_threshold
-chmod 666 /sys/module/cpu_boost/parameters/input_boost_freq 
-chmod 666 /sys/module/cpu_boost/parameters/input_boost_ms
-  
 echo "fiops" > /sys/block/mmcblk0/queue/scheduler
 echo "1024" > /sys/block/mmcblk0/queue/read_ahead_kb
 echo 1 > /sys/module/cpu_boost/parameters/cpuboost_enable
@@ -43,5 +47,9 @@ chmod 644 /sys/module/cpu_boost/parameters/boost_ms
 chmod 644 /sys/module/cpu_boost/parameters/sync_threshold
 chmod 644 /sys/module/cpu_boost/parameters/input_boost_freq 
 chmod 644 /sys/module/cpu_boost/parameters/input_boost_ms
+chmod 644 /sys/android_touch/wake_gestures  
+chmod 644 /sys/android_touch/sweep2wake 
+chmod 644 /sys/android_touch/doubletap2wake  
+chmod 644 /sys/android_touch/sweep2sleep
 
 exit 0
