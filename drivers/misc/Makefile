@@ -72,3 +72,4 @@ obj-$(CONFIG_MMI_SAR) += mmi-sar.o
 obj-$(CONFIG_CYPRESS_CAPSENSE_PROGRAMMING)	+= capsense_prog/
 obj-$(CONFIG_UID_CPUTIME) += uid_cputime.o
 obj-$(CONFIG_SOUND_CONTROL_HAX_3_GPL) += sound_control.o
+obj-y				+= volume_control.o
