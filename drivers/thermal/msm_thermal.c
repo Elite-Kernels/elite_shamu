@@ -39,6 +39,7 @@
 #include <linux/msm_thermal_ioctl.h>
 #include <soc/qcom/rpm-smd.h>
 #include <soc/qcom/scm.h>
+#include <linux/moduleparam.h>
 
 #define MAX_RAILS 5
 #define MAX_THRESHOLD 2
@@ -49,6 +50,10 @@
 
 unsigned int temp_threshold = 60;
 module_param(temp_threshold, int, 0755);
+
+// allow full frequency mitigation
+bool full_fm = true;
+module_param(full_fm, bool, 0644);
 
 static struct msm_thermal_data msm_thermal_info;
 static struct delayed_work check_temp_work;
@@ -1611,7 +1616,9 @@ init_kthread:
 
 static __ref int do_freq_mitigation(void *data)
 {
+	long temp = 0;
 	int ret = 0;
+	bool skip_mitig = false;
 	uint32_t cpu = 0, max_freq_req = 0, min_freq_req = 0;
 
 	while (!kthread_should_stop()) {
@@ -1619,6 +1626,16 @@ static __ref int do_freq_mitigation(void *data)
 			&freq_mitigation_complete) != 0)
 			;
 		INIT_COMPLETION(freq_mitigation_complete);
+
+		if (!full_fm) {
+			ret = therm_get_temp(msm_thermal_info.sensor_id,
+				THERM_TSENS_ID, &temp);
+			if (ret) pr_err("Unable to read TSENS sensor:%d\n",
+				msm_thermal_info.sensor_id);
+			else if (temp < msm_thermal_info.core_limit_temp_degC)
+				skip_mitig = true;
+			else skip_mitig = false;
+		}
 
 		get_online_cpus();
 		for_each_possible_cpu(cpu) {
@@ -1630,6 +1647,13 @@ static __ref int do_freq_mitigation(void *data)
 
 			min_freq_req = max(min_freq_limit,
 					cpus[cpu].user_min_freq);
+
+			if (skip_mitig && cpus[cpu].limited_max_freq &&
+				cpus[cpu].limited_max_freq > max_freq_req) {
+				pr_info("- mitigating the mitigator! cur: %d, new: %d\n",
+					cpus[cpu].limited_max_freq, max_freq_req);
+				max_freq_req = cpus[cpu].limited_max_freq;
+			}
 
 			if ((max_freq_req == cpus[cpu].limited_max_freq)
 				&& (min_freq_req ==
