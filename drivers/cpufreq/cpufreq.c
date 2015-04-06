@@ -31,7 +31,7 @@
 #include <trace/events/power.h>
 #include <linux/moduleparam.h>
 
-bool allow_minup = true;
+static bool allow_minup = true;
 module_param(allow_minup, bool, 0644);
 bool allow_maxdown = true;
 module_param(allow_maxdown, bool, 0644);
