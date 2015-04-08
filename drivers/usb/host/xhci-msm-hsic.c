@@ -92,7 +92,7 @@
 #define MSM_HSIC_INT_MODERATION 12000
 
 #define WL_TIMEOUT 2000
-static int wl_divide = 1;
+static int wl_divide = 0;
 module_param(wl_divide, int, 0644);
 
 static u64 dma_mask = DMA_BIT_MASK(64);
