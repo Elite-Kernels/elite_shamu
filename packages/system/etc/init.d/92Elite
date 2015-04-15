@@ -16,12 +16,12 @@ chmod 666 /sys/android_touch/sweep2sleep
  echo 0 > /sys/android_touch/wake_gestures
 
 #Set Sweep2wake
-  echo 0 > /sys/android_touch/sweep2wake
-  #echo 1 > /sys/android_touch/sweep2wake
+  #echo 0 > /sys/android_touch/sweep2wake
+  echo 1 > /sys/android_touch/sweep2wake
 
 #Set Doubletap2wake
- #echo 1 > /sys/android_touch/doubletap2wake
-  echo 0 > /sys/android_touch/doubletap2wake
+ echo 1 > /sys/android_touch/doubletap2wake
+ # echo 0 > /sys/android_touch/doubletap2wake
 
 #Set Sweep2sleep
   #echo 1 > /sys/android_touch/sweep2sleep
