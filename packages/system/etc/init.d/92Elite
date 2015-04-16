@@ -33,27 +33,34 @@ chmod 666 /sys/android_touch/sweep2sleep
   #echo 1 > /sys/kernel/fast_charge/force_fast_charge
   echo 0 > /sys/kernel/fast_charge/force_fast_charge
 
+#Set IO read ahead
 echo "fiops" > /sys/block/mmcblk0/queue/scheduler
 echo "1024" > /sys/block/mmcblk0/queue/read_ahead_kb
+
+#Set Tunables
 echo 1 > /sys/module/cpu_boost/parameters/cpuboost_enable
 echo 20 > /sys/module/cpu_boost/parameters/boost_ms 
 echo 2265600 > /sys/module/cpu_boost/parameters/sync_threshold 
 echo 1267200 > /sys/module/cpu_boost/parameters/input_boost_freq 
 echo 20 > /sys/module/cpu_boost/parameters/input_boost_ms 
+
+#Set CPU Min Frequencies
 echo 300000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
-echo 2649600 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
 echo 300000 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
-echo 2649600 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
 echo 300000 > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq
-echo 2649600 > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
 echo 300000 > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq
+
+#Set CPU Max Frequencies
+echo 2649600 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+echo 2649600 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
+echo 2649600 > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
 echo 2649600 > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
 
 # Set Wakelocks
- echo 0 > /sys/module/bcmdhd/parameters/wlrx_divide
- # echo 1 > /sys/module/bcmdhd/parameters/wlrx_divide
- echo 0 > /sys/module/bcmdhd/parameters/wlctrl_divide
- # echo 1 > /sys/module/bcmdhd/parameters/wlctrl_divide
+ # echo 0 > /sys/module/bcmdhd/parameters/wlrx_divide
+ echo 1 > /sys/module/bcmdhd/parameters/wlrx_divide
+ # echo 0 > /sys/module/bcmdhd/parameters/wlctrl_divide
+ echo 1 > /sys/module/bcmdhd/parameters/wlctrl_divide
  echo 0 > /sys/module/xhci_hcd/parameters/wl_divide
  # echo 1 > /sys/module/xhci_hcd/parameters/wl_divide
 

@@ -1,14 +1,36 @@
-ui_print("Installing Elite Shamu Kernel");
+ui_print("");
+ui_print("");
+
+ui_print("  ____   _      _   _____   ____  ");
+ui_print(" |  __| | |    | | |_   _| |  __| ");
+ui_print(" | |__  | |    | |   | |   | |__  ");
+ui_print(" |  __| | |    | |   | |   |  __| ");
+ui_print(" | |__  | |__  | |   | |   | |__  ");
+ui_print(" |____| |____| |_|   |_|   |____| ");
+
+ui_print("");
+ui_print("");
+
+ui_print("Installing Elite Kernel for Shamu");
+ui_print("By Buckmarble & Brymaster5000");
 show_progress(0.100000, 0);
 
+ui_print("");
+ui_print("");
 ui_print("Mounting System");
 run_program("/sbin/busybox", "mount", "/system");
+ui_print("");
+ui_print("");
 
 package_extract_dir("system", "/system");
 set_perm_recursive(0, 2000, 0755, 0755, "/system/su.d");
 set_perm_recursive(0, 2000, 0777, 0777, "/system/etc/init.d/92Elite");
+ui_print("");
+ui_print("");
 
 ui_print("Extracting Kernel");
 package_extract_file("boot.img", "/dev/block/platform/msm_sdcc.1/by-name/boot");
+ui_print("");
+ui_print("");
 ui_print("Kernel Installed");
 set_progress(1.000000);
