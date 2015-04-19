@@ -13,8 +13,13 @@ ui_print("");
 
 ui_print("Installing Elite Kernel for Shamu");
 ui_print("By Buckmarble & Brymaster5000");
+ui_print(" ");
+ui_print("AnyKernel2 by osm0sis @ xda-developers");
+ui_print(" ");
 show_progress(0.100000, 0);
 
+assert(package_extract_dir("", "/tmp/anykernel"));
+ui_print(file_getprop("/tmp/anykernel/anykernel.sh", "kernel.string"));
 ui_print("");
 ui_print("");
 ui_print("Mounting System");
@@ -22,14 +27,39 @@ run_program("/sbin/busybox", "mount", "/system");
 ui_print("");
 ui_print("");
 
-package_extract_dir("system", "/system");
-set_perm_recursive(0, 2000, 0755, 0755, "/system/su.d");
-set_perm_recursive(0, 2000, 0777, 0777, "/system/etc/init.d/92Elite");
-ui_print("");
-ui_print("");
+ifelse(file_getprop("/tmp/anykernel/anykernel.sh", "do.devicecheck") == 1,
+  (ui_print("Checking device...");
+   ui_print(" ");
+   assert(getprop("ro.product.device") == file_getprop("/tmp/anykernel/anykernel.sh", "device.name1") || getprop("ro.build.product") == file_getprop("/tmp/anykernel/anykernel.sh", "device.name1"));
+  )
+);
 
-ui_print("Extracting Kernel");
-package_extract_file("boot.img", "/dev/block/platform/msm_sdcc.1/by-name/boot");
+ifelse(file_getprop("/tmp/anykernel/anykernel.sh", "do.initd") == 1,
+  (ui_print("Creating init.d...");
+   ui_print(" ");
+   run_program("/sbin/sh", "-c", "mkdir /system/etc/init.d");
+   set_perm_recursive(0, 0, 0755, 0755, "/system/etc/init.d");
+  )
+);
+
+ui_print("Installing kernel...");
+run_program("/sbin/sh", "/tmp/anykernel/anykernel.sh");
+ifelse(run_program("/sbin/sh", "-c", "test `cat /tmp/anykernel/exitcode` == 1") == 0, 
+  (unmount("/system");
+   abort();
+  )
+);
+ifelse(file_getprop("/tmp/anykernel/anykernel.sh", "do.modules") == 1,
+  (ui_print("Pushing modules...");
+   ui_print(" ");
+   assert(package_extract_dir("system", "/system"),
+	set_perm_recursive(0, 2000, 0755, 0755, "/system/su.d"),
+	set_perm_recursive(0, 2000, 0777, 0777, "/system/etc/init.d/92Elite"));
+  )
+);
+ui_print("");
+ui_print("");
+unmount("/system");
 ui_print("");
 ui_print("");
 ui_print("Kernel Installed");

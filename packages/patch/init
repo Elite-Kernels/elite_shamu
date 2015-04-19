@@ -1,0 +1,7 @@
+# Execute files in /etc/init.d before booting
+service sysinit /system/bin/logwrapper /system/xbin/busybox run-parts /system/etc/init.d
+	disabled
+	class main
+	user system
+	group system
+    	oneshot

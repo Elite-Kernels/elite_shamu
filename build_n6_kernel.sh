@@ -19,12 +19,13 @@
         cd $k
 # Setup output directory
     mkdir -p "out/$c"
-    mkdir -p "out/$c/system/lib/modules/"
     cp -R "$t/system" out/$c
     cp -R "$t/META-INF" out/$c
-#    mkdir -p "out/$c/system/lib/modules/pronto"
+    cp -R "$t/patch" out/$c
+    cp -R "$t/ramdisk" out/$c
+    cp -R "$t/tools" out/$c
+    cp -R "$t/anykernel.sh" out/$c
 
-  m=$k/out/$c/system/lib/modules
   z=$c-$today
 
 TOOLCHAIN=/home/forrest/kernel/linaro-4.9.3/bin/arm-cortex_a15-linux-gnueabihf-
@@ -42,25 +43,12 @@ find ./ -name '*~' | xargs rm
 make 'shamu_defconfig'
 make -j`grep 'processor' /proc/cpuinfo | wc -l` CROSS_COMPILE=$TOOLCHAIN #>> compile.log 2>&1 || exit -1
 
-# Grab modules & zImage
+# Grab zImage-dtb
    echo ""
-   echo "<<>><<>>  Collecting modules and zimage <<>><<>>"
+   echo "<<>><<>>  Collecting zImage-dtb <<>><<>>"
    echo ""
-   #cp $k/drivers/staging/prima/wlan.ko out/$c/system/lib/modules/pronto/wlan.ko
-   for mo in $(find . -name "*.ko"); do
-		cp "${mo}" $m
+   cp $k/arch/arm/boot/zImage-dtb out/$c/zImage-dtb
    done
-# Collect imgs
-   ./splitbootimg boot.img
-   cp $k/arch/arm/boot/zImage-dtb $k
-   ./bootimg
-   cp $k/boot.img out/$c/boot.img
-
-# Clean up
-   rm -rf $k/boot.img-dtb
-   rm -rf $k/boot.img-kernel
-   rm -rf $k/boot.img-ramdisk.gz
-   rm -rf $k/zImage-dtb
    
 # Build Zip
  clear

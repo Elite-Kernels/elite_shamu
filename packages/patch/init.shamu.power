@@ -1,0 +1,2 @@
+
+restorecon_recursive /sys/devices/system/cpu/cpufreq
