@@ -60,4 +60,3 @@ make -j`grep 'processor' /proc/cpuinfo | wc -l` CROSS_COMPILE=$TOOLCHAIN #>> com
 #           rm -rf $k/out/$c
 # Line below for debugging purposes,  uncomment to stop script after each config is run
 #read this
-      done
