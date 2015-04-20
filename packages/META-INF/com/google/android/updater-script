@@ -57,6 +57,10 @@ ifelse(file_getprop("/tmp/anykernel/anykernel.sh", "do.modules") == 1,
 	set_perm_recursive(0, 2000, 0777, 0777, "/system/etc/init.d/92Elite"));
   )
 );
+ifelse(file_getprop("/tmp/anykernel/anykernel.sh", "do.cleanup") == 1,
+  (delete_recursive("/tmp/anykernel");
+  )
+);
 ui_print("");
 ui_print("");
 unmount("/system");
