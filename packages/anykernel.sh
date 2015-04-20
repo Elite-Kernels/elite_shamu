@@ -3,11 +3,11 @@
 
 ## AnyKernel setup
 # EDIFY properties
-kernel.string=Elite
+kernel.string=-Elite
 do.devicecheck=1
 do.initd=1
 do.modules=0
-do.cleanup=1
+do.cleanup=0
 device.name1=shamu
 
 # shell variables
@@ -57,21 +57,15 @@ write_boot() {
     secondoff=`cat *-secondoff`;
     secondoff="--second_offset $secondoff";
   fi;
-  if [ -f /tmp/anykernel/zImage ]; then
-    kernel=/tmp/anykernel/zImage;
+  if [ -f /tmp/anykernel/zImage-dtb ]; then
+    kernel=/tmp/anykernel/zImage-dtb;
   else
-    kernel=`ls *-zImage`;
+    kernel=`ls *-zImage-dtb`;
     kernel=$split_img/$kernel;
-  fi;
-  if [ -f /tmp/anykernel/dtb ]; then
-    dtb="--dt /tmp/anykernel/dtb";
-  elif [ -f *-dtb ]; then
-    dtb=`ls *-dtb`;
-    dtb="--dt $split_img/$dtb";
   fi;
   cd $ramdisk;
   find . | cpio -H newc -o | gzip > /tmp/anykernel/ramdisk-new.cpio.gz;
-  $bin/mkbootimg --kernel $kernel --ramdisk /tmp/anykernel/ramdisk-new.cpio.gz $second --cmdline "$cmdline" --board "$board" --base $base --pagesize $pagesize --kernel_offset $kerneloff --ramdisk_offset $ramdiskoff $secondoff --tags_offset $tagsoff $dtb --output /tmp/anykernel/boot-new.img;
+  $bin/mkbootimg --kernel $kernel --ramdisk /tmp/anykernel/ramdisk-new.cpio.gz $second --cmdline "$cmdline" --board "$board" --base $base --pagesize $pagesize --kernel_offset $kerneloff --ramdisk_offset $ramdiskoff $secondoff --tags_offset $tagsoff  --output /tmp/anykernel/boot-new.img;
   if [ $? != 0 -o `wc -c < /tmp/anykernel/boot-new.img` -gt `wc -c < /tmp/anykernel/boot.img` ]; then
     ui_print " "; ui_print "Repacking image failed. Aborting...";
     echo 1 > /tmp/anykernel/exitcode; exit;
@@ -146,6 +140,13 @@ replace_file() {
 # set permissions for included files
 chmod -R 755 $ramdisk
 chmod 640 $ramdisk/fstab.shamu
+chmod 750 $ramdisk/init.shamu.power.rc
+
+# backup then replace fstab and shamu.power.rc
+backup_file fstab.shamu;
+backup_file init.shamu.power.rc;
+replace_file fstab.shamu $ramdisk/fstab.shamu;
+replace_file init.shamu.power.rc $ramdisk/init.shamu.power.rc;
 
 
 ## AnyKernel install
@@ -153,26 +154,14 @@ dump_boot;
 
 # begin ramdisk changes
 
-# fstab.shamu
-backup_file fstab.shamu;
-insert_line fstab.shamu "rw,nosuid,nodev,noatime,nodiratime,inline_xattr" after "/dev/block/platform/msm_sdcc.1/by-name/system         /system      ext4    ro,barrier=1                                wait" "/dev/block/platform/msm_sdcc.1/by-name/userdata    /data           f2fs    rw,nosuid,nodev,noatime,nodiratime,inline_xattr                 wait,encryptable=/dev/block/platform/msm_sdcc.1/by-name/metadata";
-insert_line fstab.shamu "rw,nosuid,nodev,noatime,nodiratime,inline_xattr" after "/dev/block/platform/msm_sdcc.1/by-name/userdata    /data        ext4    rw,nosuid,nodev,noatime,nodiratime,noauto_da_alloc,nobarrier    wait,check,encryptable=/dev/block/platform/msm_sdcc.1/by-name/metadata" "/dev/block/platform/msm_sdcc.1/by-name/cache       /cache          f2fs    rw,nosuid,nodev,noatime,nodiratime,inline_xattr                 wait,check";
-
 # default.prop
 backup_file default.prop;
-prepend_file default.prop "ro.adb.secure=0" default;
+replace_line default.prop "ro.adb.secure=1" "ro.adb.secure=0";
+replace_line default.prop "ro.secure=1" "ro.adb.secure=0";
 
 # init.rc
 backup_file init.rc;
-append_file init.rc "/system/etc/init.d" init;
-
-# init.shamu.power
-backup_file init.shamu.power.rc;
-prepend_file init.shamu.power.rc "/sys/devices/system/cpu/cpufreq" init.shamu.power;
-
-# ueventd.rc
-backup_file ueventd.rc;
-append_file ueventd.rc "cpufreq/scaling_governor" ueventd;
+append_file init.rc "run-parts" init;
 
 # end ramdisk changes
 

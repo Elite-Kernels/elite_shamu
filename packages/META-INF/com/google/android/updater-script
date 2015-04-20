@@ -34,14 +34,6 @@ ifelse(file_getprop("/tmp/anykernel/anykernel.sh", "do.devicecheck") == 1,
   )
 );
 
-ifelse(file_getprop("/tmp/anykernel/anykernel.sh", "do.initd") == 1,
-  (ui_print("Creating init.d...");
-   ui_print(" ");
-   run_program("/sbin/sh", "-c", "mkdir /system/etc/init.d");
-   set_perm_recursive(0, 0, 0755, 0755, "/system/etc/init.d");
-  )
-);
-
 ui_print("Installing kernel...");
 run_program("/sbin/sh", "/tmp/anykernel/anykernel.sh");
 ifelse(run_program("/sbin/sh", "-c", "test `cat /tmp/anykernel/exitcode` == 1") == 0, 
@@ -49,18 +41,21 @@ ifelse(run_program("/sbin/sh", "-c", "test `cat /tmp/anykernel/exitcode` == 1") 
    abort();
   )
 );
+
 ifelse(file_getprop("/tmp/anykernel/anykernel.sh", "do.modules") == 1,
-  (ui_print("Pushing modules...");
+  (ui_print("Pushing Scripts...");
    ui_print(" ");
    assert(package_extract_dir("system", "/system"),
 	set_perm_recursive(0, 2000, 0755, 0755, "/system/su.d"),
 	set_perm_recursive(0, 2000, 0777, 0777, "/system/etc/init.d/92Elite"));
   )
 );
+
 ifelse(file_getprop("/tmp/anykernel/anykernel.sh", "do.cleanup") == 1,
   (delete_recursive("/tmp/anykernel");
   )
 );
+
 ui_print("");
 ui_print("");
 unmount("/system");
