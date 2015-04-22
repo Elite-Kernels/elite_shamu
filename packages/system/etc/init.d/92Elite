@@ -12,25 +12,35 @@ chmod 666 /sys/android_touch/doubletap2wake
 chmod 666 /sys/android_touch/sweep2sleep
   
 #Set Wake Gestures
- #echo 1 > /sys/android_touch/wake_gestures
- echo 0 > /sys/android_touch/wake_gestures
+ #disable = 0
+ #enable = 1
+  echo 0 > /sys/android_touch/wake_gestures
 
 #Set Sweep2wake
-  #echo 0 > /sys/android_touch/sweep2wake
+ #Add them together. For example, to enable sweep2wake in every direction:
+ #echo 15 > /sys/android_touch/sweep2wake
+ #disable = 0
+ #sweep right = 1
+ #sweep left = 2
+ #sweep up = 4
+ #sweep down = 8
   echo 1 > /sys/android_touch/sweep2wake
 
 #Set Doubletap2wake
- echo 1 > /sys/android_touch/doubletap2wake
- # echo 0 > /sys/android_touch/doubletap2wake
+ #disable = 0
+ #enable = 1
+  echo 1 > /sys/android_touch/doubletap2wake
 
 #Set Sweep2sleep
-  #echo 1 > /sys/android_touch/sweep2sleep
+ #disable = 0
+ #sweep right = 1
+ #sweep left = 2
+ #sweep left or right = 3
   echo 2 > /sys/android_touch/sweep2sleep
-  #echo 3 > /sys/android_touch/sweep2sleep
-  #echo 0 > /sys/android_touch/sweep2sleep
 
 #Set FASTCHARGE
-  #echo 1 > /sys/kernel/fast_charge/force_fast_charge
+ #disable = 0
+ #enable = 1
   echo 0 > /sys/kernel/fast_charge/force_fast_charge
 
 #Set IO read ahead
