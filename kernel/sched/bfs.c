@@ -709,7 +709,7 @@ static bool suitable_idle_cpus(struct task_struct *p)
 {
 	if (!grq.idle_cpus)
 		return false;
-	return (cpus_intersects(tsk_cpus_allowed(p), grq.cpu_idle_map));
+	return (cpus_intersects(p->cpus_allowed, grq.cpu_idle_map));
 }
 
 #define CPUIDLE_DIFF_THREAD	(1)
