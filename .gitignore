@@ -14,6 +14,7 @@
 *.o.*
 *.a
 *.s
+*.S
 *.ko
 *.so
 *.so.dbg
@@ -30,6 +31,7 @@ modules.builtin
 *.lzma
 *.xz
 *.lzo
+*.lz4
 *.patch
 *.gcno
 
