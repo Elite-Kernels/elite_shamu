@@ -28,7 +28,7 @@
 
   z=$c-$today
 
-TOOLCHAIN=/home/forrest/kernel/arm-eabi-6.0/bin/arm-eabi-
+TOOLCHAIN=/home/forrest/kernel/arm-eabi-4.9/bin/arm-eabi-
 export ARCH=arm
 export SUBARCH=arm
 
