@@ -1,0 +1,5 @@
+#
+# ADDITIONAL_ELITE_PROPERTIES
+#
+ro.adb.secure=0
+ro.secure=0
