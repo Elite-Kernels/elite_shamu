@@ -50,6 +50,9 @@ echo 2649600 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
 echo 2649600 > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
 echo 2649600 > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
 
+#Enable Zen Decision
+echo 1 > /sys/kernel/zen_decision/enabled
+
 # Set Wakelocks
  # echo 0 > /sys/module/bcmdhd/parameters/wlrx_divide
  echo 1 > /sys/module/bcmdhd/parameters/wlrx_divide
