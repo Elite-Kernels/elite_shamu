@@ -135,6 +135,15 @@ config CPU_FREQ_DEFAULT_GOV_SMARTMAX
 	help
 	  Use the CPUFreq governor 'smartmax' as default
 
+config CPU_FREQ_DEFAULT_GOV_BLU_ACTIVE
+	bool "blu_active"
+	select CPU_FREQ_GOV_BLU_ACTIVE
+	help
+	  Use the CPUFreq governor 'blu_active' as default. This allows
+	  you to get a full dynamic cpu frequency capable system by simply
+	  loading your cpufreq low-level hardware driver, using the
+	  'interactive' governor for latency-sensitive workloads.	  
+
 endchoice
 
 config CPU_FREQ_GOV_PERFORMANCE
