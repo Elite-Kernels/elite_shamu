@@ -572,9 +572,9 @@ service qseecomd /system/bin/qseecomd
    user root
    group root
 
-#service mpdecision /system/bin/mpdecision --avg_comp
-#   class main
-#   user root
+service mpdecision /system/bin/mpdecision --avg_comp
+   class main
+   user root
 
 service ss_ramdump /system/bin/subsystem_ramdump
     class main
