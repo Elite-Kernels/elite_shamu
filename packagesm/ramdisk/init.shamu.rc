@@ -367,7 +367,7 @@ service bridgemgrd /system/bin/bridgemgrd
 # QMUX must be in multiple groups to support external process connections
 service qmuxd /system/bin/qmuxd
     class main
-    user root
+    user radio
     group radio audio bluetooth gps
 
 service netmgrd /system/bin/netmgrd
@@ -566,6 +566,9 @@ service bdAddrLoader /system/bin/bdAddrLoader -p ro.boot.btmacaddr -s -x
 
 on property:vold.decrypt=trigger_reset_main
     stop gnss-svcd
+
+on verity-logging
+    exec u:r:slideshow:s0 -- /sbin/slideshow warning/verity_red_1 warning/verity_red_2
 
 # When QCA1530 is known not to present
 on property:persist.qca1530=no

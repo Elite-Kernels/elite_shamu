@@ -3,7 +3,7 @@ on charger
     #disable zen decision
     write /sys/kernel/zen_decision/enabled 0
     #low power governing
-    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor blu_active
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor conservative
     write /sys/devices/system/cpu/cpu1/online 0
     write /sys/devices/system/cpu/cpu2/online 0
     write /sys/devices/system/cpu/cpu3/online 0
@@ -16,35 +16,24 @@ on charger
 
 on boot
     # Shamu boots with performance governor.
-    # Switch one core to blu_active to set permissions, for power hal and system server.
-    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor blu_active
-    chown system system /sys/devices/system/cpu/cpufreq/blu_active/timer_rate
-    chmod 0660 /sys/devices/system/cpu/cpufreq/blu_active/timer_rate
-    chown system system /sys/devices/system/cpu/cpufreq/blu_active/timer_slack
-    chmod 0660 /sys/devices/system/cpu/cpufreq/blu_active/timer_slack
-    chown system system /sys/devices/system/cpu/cpufreq/blu_active/min_sample_time
-    chmod 0660 /sys/devices/system/cpu/cpufreq/blu_active/min_sample_time
-    chown system system /sys/devices/system/cpu/cpufreq/blu_active/hispeed_freq
-    chmod 0660 /sys/devices/system/cpu/cpufreq/blu_active/hispeed_freq
-    chown system system /sys/devices/system/cpu/cpufreq/blu_active/go_hispeed_load
-    chmod 0660 /sys/devices/system/cpu/cpufreq/blu_active/go_hispeed_load
-    chown system system /sys/devices/system/cpu/cpufreq/blu_active/above_hispeed_delay
-    chmod 0660 /sys/devices/system/cpu/cpufreq/blu_active/above_hispeed_delay
-    chown system system /sys/devices/system/cpu/cpufreq/blu_active/boostpulse
-    chown system system /sys/devices/system/cpu/cpufreq/blu_active/boostpulse_duration
-    chmod 0660 /sys/devices/system/cpu/cpufreq/blu_active/boostpulse_duration
-    chown system system /sys/devices/system/cpu/cpufreq/blu_active/input_boost_freq
-    chmod 0660 /sys/devices/system/cpu/cpufreq/blu_active/input_boost_freq
-    chown system system /sys/devices/system/cpu/cpufreq/blu_active/boostpulse_duration
-    chmod 0660 /sys/devices/system/cpu/cpufreq/blu_active/boostpulse_duration
-    chown system system /sys/devices/system/cpu/cpufreq/blu_active/io_is_busy
-    chmod 0660 /sys/devices/system/cpu/cpufreq/blu_active/io_is_busy
-    chown system system /sys/devices/system/cpu/cpufreq/blu_active/low_load_down_threshold
-    chmod 0660 /sys/devices/system/cpu/cpufreq/blu_active/low_load_down_threshold
-    chown system system /sys/devices/system/cpu/cpufreq/blu_active/max_freq_hysteresis
-    chmod 0660 /sys/devices/system/cpu/cpufreq/blu_active/max_freq_hysteresis
+    chown system system /dev/cpuctl/apps/cpu.notify_on_migrate
+    chmod 0660 /dev/cpuctl/apps/cpu.notify_on_migrate
+    write /sys/module/msm_thermal/core_control/enabled 0
 
 on property:dev.bootcomplete=1
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor conservative
+    write /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor conservative
+    write /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor conservative
+    write /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor conservative
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq 2649600
+    write /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq 2649600
+    write /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq 2649600
+    write /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq 2649600
+    write /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq 300000
+    write /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq 300000
+    write /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq 300000
+    write /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq 300000
+    write /sys/module/msm_thermal/core_control/enabled 1
     write /sys/module/lpm_levels/enable_low_power/l2 4
     write /sys/module/msm_pm/modes/cpu0/power_collapse/suspend_enabled 1
     write /sys/module/msm_pm/modes/cpu1/power_collapse/suspend_enabled 1
@@ -66,18 +55,13 @@ on property:dev.bootcomplete=1
     write /sys/module/msm_pm/modes/cpu1/retention/idle_enabled 1
     write /sys/module/msm_pm/modes/cpu2/retention/idle_enabled 1
     write /sys/module/msm_pm/modes/cpu3/retention/idle_enabled 1
-    write /sys/module/msm_thermal/core_control/enabled 0
-    write /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor blu_active
-    write /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor blu_active
-    write /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor blu_active
-    write /sys/module/msm_thermal/core_control/enabled 1
-    write /sys/devices/system/cpu/cpufreq/blu_active/io_is_busy 1
+    write /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor conservative
+    write /sys/devices/system/cpu/cpu2/cpufreq/scaling_governor conservative
+    write /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor conservative
 
     # cpufreq settings
-    write /sys/devices/system/cpu/cpufreq/blu_active/above_hispeed_delay 20000
-    write /sys/devices/system/cpu/cpufreq/blu_active/go_hispeed_load 95
-    write /sys/devices/system/cpu/cpufreq/blu_active/hispeed_freq 2649600
-    write /sys/devices/system/cpu/cpufreq/blu_active/timer_rate 20000
-    write /sys/devices/system/cpu/cpufreq/blu_active/min_sample_time 80000
-    write /sys/devices/system/cpu/cpufreq/blu_active/boostpulse_duration 80000
+    write /sys/devices/system/cpu/cpufreq/conservative/down_threshold 30
+    write /sys/devices/system/cpu/cpufreq/conservative/up_threshold 95
+    write /sys/devices/system/cpu/cpufreq/conservative/input_boost_freq 1728000
+    write /sys/devices/system/cpu/cpufreq/conservative/input_boost_duration 1000000
     write /dev/cpuctl/apps/cpu.notify_on_migrate 0
