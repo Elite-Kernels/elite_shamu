@@ -29,7 +29,7 @@
 
   y=$c-$today
 
-TOOLCHAIN=/home/forrest/kernel/arm-eabi-4.9/bin/arm-eabi-
+TOOLCHAIN=/home/forrest/kernel/linaro-4.9.4/bin/arm-cortex_a15-linux-gnueabihf-
 export ARCH=arm
 export SUBARCH=arm
 
