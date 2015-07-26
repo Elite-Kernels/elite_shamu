@@ -51,8 +51,8 @@ echo 2649600 > /sys/devices/system/cpu/cpu2/cpufreq/scaling_max_freq
 echo 2649600 > /sys/devices/system/cpu/cpu3/cpufreq/scaling_max_freq
 
 #Enable Zen Decision
-# stop mpdecision
-echo 0 > /sys/kernel/zen_decision/enabled
+ stop mpdecision
+echo 1 > /sys/kernel/zen_decision/enabled
 echo 500 > /sys/kernel/zen_decision/wake_wait_time
 
 # Set Wakelocks
