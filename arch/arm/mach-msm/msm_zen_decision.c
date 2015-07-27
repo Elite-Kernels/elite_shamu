@@ -25,7 +25,6 @@
 #include <linux/platform_device.h>
 #include <linux/workqueue.h>
 #include <linux/power_supply.h>
-#include <linux/mutex.h>
 
 #define ZEN_DECISION "zen_decision"
 
@@ -61,12 +60,6 @@ struct kobject *zendecision_kobj;
 /* Power supply information */
 static struct power_supply *psy;
 union power_supply_propval current_charge;
-
-struct msm_zen_decision_off_t {
-       struct mutex core_mutex;
-       unsigned int screen_off;
-};
-static DEFINE_PER_CPU(struct msm_zen_decision_off_t, msm_zen_decision_off);
 
 /*
  * Some devices may have a different name power_supply device representing the battery.
@@ -108,10 +101,7 @@ static void __ref msm_zd_online_all_cpus(struct work_struct *work)
 	int cpu;
 
 	for_each_cpu_not(cpu, cpu_online_mask) {
-	        mutex_lock(&per_cpu(msm_zen_decision_off, cpu).core_mutex);
 		cpu_up(cpu);
-		per_cpu(msm_zen_decision_off, cpu).screen_off = false;
-		mutex_unlock(&per_cpu(msm_zen_decision_off, cpu).core_mutex);		
 	}
 }
 
@@ -329,7 +319,6 @@ static struct platform_device zd_device = {
 
 static int __init zd_init(void)
 {
-        int cpu;
 	int ret = platform_driver_register(&zd_driver);
 	if (ret)
 		pr_err("[%s]: platform_driver_register failed: %d\n", ZEN_DECISION, ret);
@@ -343,22 +332,13 @@ static int __init zd_init(void)
 	else
 		pr_info("[%s]: platform_device_register succeeded\n", ZEN_DECISION);
 
-        for_each_possible_cpu(cpu) {
-		mutex_init(&(per_cpu(msm_zen_decision_off, cpu).core_mutex));
-		per_cpu(msm_zen_decision_off, cpu).screen_off = false;
-	}
-	
 	return ret;
 }
 
 static void __exit zd_exit(void)
 {
-        int cpu;
 	platform_driver_unregister(&zd_driver);
 	platform_device_unregister(&zd_device);
-        for_each_possible_cpu(cpu) {
-		mutex_destroy(&(per_cpu(msm_zen_decision_off, cpu).core_mutex));
-	}
 }
 
 late_initcall(zd_init);
