@@ -17,6 +17,19 @@
 import init.shamu.usb.rc
 import init.shamu.power.rc
 import init.shamu.diag.rc
+    
+service run_earlier /sbin/ek-early-boot.sh
+     disabled
+     oneshot
+
+service ek-post-boot /sbin/ek-post-boot.sh
+     class late_start
+     user root
+     disabled
+     oneshot
+
+on property:sys.boot_completed=1
+     start ek-post-boot
 
 on early-init
     mkdir /firmware 0771 system system
