@@ -63,5 +63,5 @@ on property:dev.bootcomplete=1
     write /sys/devices/system/cpu/cpufreq/conservative/down_threshold 30
     write /sys/devices/system/cpu/cpufreq/conservative/up_threshold 95
     write /sys/devices/system/cpu/cpufreq/conservative/input_boost_freq 1728000
-    write /sys/devices/system/cpu/cpufreq/conservative/input_boost_duration 500000
+    write /sys/devices/system/cpu/cpufreq/conservative/input_boost_duration 1000000
     write /dev/cpuctl/apps/cpu.notify_on_migrate 0
