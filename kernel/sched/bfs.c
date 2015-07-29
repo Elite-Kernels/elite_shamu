@@ -944,8 +944,6 @@ static void activate_task(struct task_struct *p, struct rq *rq)
 	if (task_contributes_to_load(p))
 		grq.nr_uninterruptible--;
 	enqueue_task(p);
-	rq->soft_affined++;
-	p->on_rq = 1;
 	grq.nr_running++;
 	inc_qnr();
 }
@@ -956,12 +954,10 @@ static inline void clear_sticky(struct task_struct *p);
  * deactivate_task - If it's running, it's not on the grq and we can just
  * decrement the nr_running. Enter with grq locked.
  */
-static inline void deactivate_task(struct task_struct *p, struct rq *rq)
+static inline void deactivate_task(struct task_struct *p)
 {
 	if (task_contributes_to_load(p))
 		grq.nr_uninterruptible++;
-	rq->soft_affined--;
-	p->on_rq = 0;
 	grq.nr_running--;
 	clear_sticky(p);
 }
@@ -987,10 +983,6 @@ void set_task_cpu(struct task_struct *p, unsigned int cpu)
 	 * per-task data have been completed by this moment.
 	 */
 	smp_wmb();
-	if (p->on_rq) {
-		task_rq(p)->soft_affined--;
-		cpu_rq(cpu)->soft_affined++;
-	}
 	task_thread_info(p)->cpu = cpu;
 }
 
@@ -1639,6 +1631,7 @@ void wake_up_new_task(struct task_struct *p)
 	update_task_priodl(p);
 
 	activate_task(p, rq);
+	p->on_rq = 1;
 	trace_sched_wakeup_new(p, 1);
 	if (unlikely(p->policy == SCHED_FIFO))
 		goto after_ts_init;
@@ -1946,15 +1939,18 @@ unsigned long nr_active(void)
 	return nr_running() + nr_uninterruptible();
 }
 
-/* Beyond a task running on this CPU, load is equal everywhere on BFS, so we
- * base it on the number of running or queued tasks with their ->rq pointer
- * set to this cpu as being the CPU they're more likely to run on. */
+/* Beyond a task running on this CPU, load is equal everywhere on BFS */
+static inline unsigned long cpu_load(struct rq *rq)
+{
+	return rq->rq_running + ((queued_notrunning() + nr_uninterruptible()) / grq.noc);
+}
+
 void get_iowait_load(unsigned long *nr_waiters, unsigned long *load)
 {
 	struct rq *this = this_rq();
 
 	*nr_waiters = atomic_read(&this->nr_iowait);
-	*load = this->soft_affined;
+	*load = cpu_load(this);
 }
 
 /* Variables and functions for calc_load */
@@ -3258,7 +3254,7 @@ need_resched:
 		prev->last_ran = rq->clock_task;
 
 		if (deactivate)
-			deactivate_task(prev, rq);
+			deactivate_task(prev);
 		else {
 			/* Task changed affinity off this CPU */
 			if (likely(!needs_other_cpu(prev, cpu))) {
