@@ -1,7 +1,6 @@
 /* linux/arch/arm/mach-msm/msm_zen_decision.c
  *
- * In-kernel solution to replace CPU hotplug work that breaks from
- * disabling certain MSM userspace applications.
+ * In-kernel replacement for MSM/MPDecision userspace service.
  *
  * Copyright (c) 2015 Brandon Berhent
  *
@@ -24,94 +23,89 @@
 #include <linux/notifier.h>
 #include <linux/platform_device.h>
 #include <linux/workqueue.h>
-#include <linux/power_supply.h>
 #include <linux/mutex.h>
 
 #define ZEN_DECISION "zen_decision"
 
-/*
- * Enable/Disable driver
- */
+/* Enable/Disable driver */
 unsigned int enabled = 1;
 
-/*
- * How long to wait to enable cores on wake (in ms)
- */
-#define WAKE_WAIT_TIME_MAX 60000 // 1 minute maximum
-unsigned int wake_wait_time = 1000;
->>>>>>> d0248c3... msm: zen_decision v2.0
+/* How long to wait to disable cores on suspend (in ms) */
+#define SUSPEND_WAIT_TIME_MAX 60000 // 1 minute maximum
+unsigned int suspend_wait_time = 5000;
 
-/*
- * Battery level threshold to ignore UP operations.
- * Only do CPU_UP work when battery level is above this value.
- *
- * Setting to 0 will do CPU_UP work regardless of battery level.
- */
-unsigned int bat_threshold_ignore = 15;
-
-/* FB Notifier */
 static struct notifier_block fb_notifier;
 
-/* Worker Stuff */
-static struct workqueue_struct *zen_wake_wq;
-static struct delayed_work wake_work;
+static struct workqueue_struct *zen_suspend_wq;
+static struct delayed_work suspend_work;
 
-/* Sysfs stuff */
 struct kobject *zendecision_kobj;
 
-/* Power supply information */
-// If there is no power_supply device named "battery", battery calculation will be ignored.
-char ps_name[] = "battery";
-static struct power_supply *psy;
-union power_supply_propval current_charge;
+struct msm_zen_decision_off_t {
+	struct mutex core_mutex;
+	unsigned int screen_off;
+};
+static DEFINE_PER_CPU(struct msm_zen_decision_off_t, msm_zen_decision_off);
 
-static int get_power_supply_level(void)
+/*
+ * __msm_zen_dec_suspend
+ *
+ * Core suspend work function.
+ * Brings all CPUs except CPU0 offline
+ */
+static void __msm_zen_dec_suspend(struct work_struct *work)
 {
-	int ret;
-	if (!psy) {
-		ret = -ENXIO;
-		return ret;
+	int cpu;
+
+	for_each_online_cpu(cpu) {
+		/* Don't call cpu_down if cpu0 */
+		if (cpu == 0) continue;
+		mutex_lock(&per_cpu(msm_zen_decision_off, cpu).core_mutex);
+		cpu_down(cpu);
+		per_cpu(msm_zen_decision_off, cpu).screen_off = true;
+		mutex_unlock(&per_cpu(msm_zen_decision_off, cpu).core_mutex);
 	}
-
-	ret = psy->get_property(psy, POWER_SUPPLY_PROP_CAPACITY, &current_charge);
-	if (ret)
-		return ret;
-
-	return current_charge.intval;
 }
 
 /*
- * __msm_zen_dec_wake
+ * msm_zen_dec_suspend
  *
- * Core wake work function.
- * Brings all CPUs online. Called from worker thread.
+ * Call __msm_zen_dec_suspend as delayed work by suspend_wait_time
+ * This is configurably delayed to avoid excessive CPU downing
  */
-static void __ref __msm_zen_dec_wake(struct work_struct *work)
+static int msm_zen_dec_suspend(void)
+{
+	int ret;
+
+	INIT_DELAYED_WORK(&suspend_work, __msm_zen_dec_suspend);
+	ret = queue_delayed_work_on(0, zen_suspend_wq, &suspend_work,
+			msecs_to_jiffies(suspend_wait_time));
+
+	return ret;
+}
+
+/*
+ * msm_zen_dec_resume
+ *
+ * Core resume function.
+ * Cancels suspend work and brings all CPUs online.
+ */
+static void __ref msm_zen_dec_resume(void)
 {
 	int cpu;
+
+	/* Clear suspend workqueue */
+	flush_workqueue(zen_suspend_wq);
+	cancel_delayed_work_sync(&suspend_work);
 
 	for_each_cpu_not(cpu, cpu_online_mask) {
 		/* Don't call cpu_up if cpu0 */
 		if (cpu == 0) continue;
+		mutex_lock(&per_cpu(msm_zen_decision_off, cpu).core_mutex);
 		cpu_up(cpu);
+		per_cpu(msm_zen_decision_off, cpu).screen_off = false;
+		mutex_unlock(&per_cpu(msm_zen_decision_off, cpu).core_mutex);
 	}
-}
-
-/*
- * msm_zen_dec_wake
- *
- * Call __msm_zen_dec_wake as a delayed worker thread on wake_wq.
- * Delayed by wake_wait_time.
- */
-static int msm_zen_dec_wake(void)
-{
-	int ret;
-
-	INIT_DELAYED_WORK(&wake_work, __msm_zen_dec_wake);
-	ret = queue_delayed_work_on(0, zen_wake_wq, &wake_work,
-			msecs_to_jiffies(wake_wait_time));
-
-	return ret;
 }
 
 /** Use FB notifiers to detect screen off/on and do the work **/
@@ -125,21 +119,12 @@ static int fb_notifier_callback(struct notifier_block *nb,
 	if (!enabled)
 		return 0;
 
-	/* Clear wake workqueue */
-	flush_workqueue(zen_wake_wq);
-	cancel_delayed_work_sync(&wake_work);
-
 	if (evdata && evdata->data && event == FB_EVENT_BLANK) {
 		blank = evdata->data;
-		if (*blank == FB_BLANK_UNBLANK) {
-			// Make decision based on bat_threshold_ignore
-			if (psy && bat_threshold_ignore)
-				// If current level > ignore threshold, then queue UP work
-				if (get_power_supply_level() > bat_threshold_ignore)
-					msm_zen_dec_wake();
-			else
-				msm_zen_dec_wake();
-		}
+		if (*blank == FB_BLANK_UNBLANK)
+			msm_zen_dec_resume();
+		else if (*blank == FB_BLANK_POWERDOWN)
+			msm_zen_dec_suspend();
 	}
 
 	return 0;
@@ -162,6 +147,10 @@ static ssize_t enable_store(struct kobject *kobj,
 	if (ret < 0)
 		return ret;
 
+	/* Bring everybody online if we are disabling the driver */
+	if (enabled && new_val < 1)
+		msm_zen_dec_resume();
+
 	if (new_val > 0)
 		enabled = 1;
 	else
@@ -170,13 +159,13 @@ static ssize_t enable_store(struct kobject *kobj,
 	return size;
 }
 
-static ssize_t wake_delay_show(struct kobject *kobj,
+static ssize_t suspend_delay_show(struct kobject *kobj,
 	struct kobj_attribute *attr, char *buf)
 {
-	return sprintf(buf, "%u\n", wake_wait_time);
+	return sprintf(buf, "%u\n", suspend_wait_time);
 }
 
-static ssize_t wake_delay_store(struct kobject *kobj,
+static ssize_t suspend_delay_store(struct kobject *kobj,
 	struct kobj_attribute *attr, const char *buf, size_t size)
 {
 	int ret;
@@ -185,32 +174,8 @@ static ssize_t wake_delay_store(struct kobject *kobj,
 	if (ret < 0)
 		return ret;
 
-	/* Restrict value between 0 and WAKE_WAIT_TIME_MAX */
-	wake_wait_time = new_val > WAKE_WAIT_TIME_MAX ? WAKE_WAIT_TIME_MAX : new_val;
-
-	return size;
-}
-
-static ssize_t bat_threshold_ignore_show(struct kobject *kobj,
-	struct kobj_attribute *attr, char *buf)
-{
-	return sprintf(buf, "%u\n", bat_threshold_ignore);
-}
-
-static ssize_t bat_threshold_ignore_store(struct kobject *kobj,
-	struct kobj_attribute *attr, const char *buf, size_t size)
-{
-	int ret;
-	unsigned long new_val;
-	ret = kstrtoul(buf, 0, &new_val);
-	if (ret < 0)
-		return ret;
-
-	/* Restrict between 0 and 100 */
-	if (new_val > 100)
-		bat_threshold_ignore = 100;
-	else if (new_val < 0)
-		bat_threshold_ignore = 0;
+	/* Restrict value between 0 and SUSPEND_WAIT_TIME_MAX */
+	suspend_wait_time = new_val > SUSPEND_WAIT_TIME_MAX ? SUSPEND_WAIT_TIME_MAX : new_val;
 
 	return size;
 }
@@ -219,18 +184,13 @@ static struct kobj_attribute kobj_enabled =
 	__ATTR(enabled, 0644, enable_show,
 		enable_store);
 
-static struct kobj_attribute kobj_wake_wait =
-	__ATTR(wake_wait_time, 0644, wake_delay_show,
-		wake_delay_store);
-
-static struct kobj_attribute kobj_bat_threshold_ignore =
-	__ATTR(bat_threshold_ignore, 0644, bat_threshold_ignore_show,
-		bat_threshold_ignore_store);
+static struct kobj_attribute kobj_suspend_wait =
+	__ATTR(suspend_wait_time, 0644, suspend_delay_show,
+		suspend_delay_store);
 
 static struct attribute *zen_decision_attrs[] = {
 	&kobj_enabled.attr,
-	&kobj_wake_wait.attr,
-	&kobj_bat_threshold_ignore.attr,
+	&kobj_suspend_wait.attr,
 	NULL,
 };
 
@@ -261,8 +221,8 @@ static int zen_decision_probe(struct platform_device *pdev)
 	}
 
 	/* Setup Workqueues */
-	zen_wake_wq = alloc_workqueue("zen_wake_wq", WQ_FREEZABLE, 0);
-	if (!zen_wake_wq) {
+	zen_suspend_wq = alloc_workqueue("zen_suspend_wq", WQ_FREEZABLE, 0);
+	if (!zen_suspend_wq) {
 		pr_err("[%s]: Failed to allocate suspend workqueue\n", ZEN_DECISION);
 		return -ENOMEM;
 	}
@@ -274,14 +234,6 @@ static int zen_decision_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 
-	/* Setup power supply */
-	psy = power_supply_get_by_name(ps_name);
-	// We can continue without finding PS info, print debug info
-	if (!psy)
-		pr_warn("[%s]: power supply '%s' not found, continuing without \n", ZEN_DECISION, ps_name);
-	else
-		pr_info("[%s]: power supply '%s' found\n", ZEN_DECISION, ps_name);
-
 	/* Everything went well, lets say we loaded successfully */
 	pr_info("[%s]: driver initialized successfully \n", ZEN_DECISION);
 
@@ -292,9 +244,9 @@ static int zen_decision_remove(struct platform_device *pdev)
 {
 	kobject_put(zendecision_kobj);
 
-	flush_workqueue(zen_wake_wq);
-	cancel_delayed_work_sync(&wake_work);
-	destroy_workqueue(zen_wake_wq);
+	flush_workqueue(zen_suspend_wq);
+	cancel_delayed_work_sync(&suspend_work);
+	destroy_workqueue(zen_suspend_wq);
 
 	fb_unregister_client(&fb_notifier);
 	fb_notifier.notifier_call = NULL;
@@ -318,6 +270,7 @@ static struct platform_device zen_decision_device = {
 
 static int __init zen_decision_init(void)
 {
+	int cpu;
 	int ret = platform_driver_register(&zen_decision_driver);
 	if (ret)
 		pr_err("[%s]: platform_driver_register failed: %d\n", ZEN_DECISION, ret);
@@ -331,19 +284,29 @@ static int __init zen_decision_init(void)
 	else
 		pr_info("[%s]: platform_device_register succeeded\n", ZEN_DECISION);
 
+	for_each_possible_cpu(cpu) {
+		mutex_init(&(per_cpu(msm_zen_decision_off, cpu).core_mutex));
+		per_cpu(msm_zen_decision_off, cpu).screen_off = false;
+	}
+
 	return ret;
 }
 
 static void __exit zen_decision_exit(void)
 {
+	int cpu;
+
 	platform_driver_unregister(&zen_decision_driver);
 	platform_device_unregister(&zen_decision_device);
+	for_each_possible_cpu(cpu) {
+		mutex_destroy(&(per_cpu(msm_zen_decision_off, cpu).core_mutex));
+	}
 }
 
 late_initcall(zen_decision_init);
 module_exit(zen_decision_exit);
 
-MODULE_VERSION("2.0");
-MODULE_DESCRIPTION("Zen Decision - Kernel MSM Userspace Handler");
+MODULE_VERSION("1.0");
+MODULE_DESCRIPTION("Zen Decision MPDecision Replacement");
 MODULE_LICENSE("GPL v2");
 MODULE_AUTHOR("Brandon Berhent <bbedward@gmail.com>");
