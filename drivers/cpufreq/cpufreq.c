@@ -25,7 +25,6 @@
 #include <linux/kernel_stat.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
-#include <linux/sched.h>
 #include <linux/slab.h>
 #include <linux/syscore_ops.h>
 #include <linux/tick.h>
