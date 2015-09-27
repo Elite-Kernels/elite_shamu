@@ -6,6 +6,8 @@ chmod 666 /sys/android_touch/wake_gestures
 chmod 666 /sys/android_touch/sweep2wake 
 chmod 666 /sys/android_touch/doubletap2wake  
 chmod 666 /sys/android_touch/sweep2sleep
+chmod 444 /dev/erandom
+chmod 444 /dev/frandom
 
 # Prevent min freq from being changed by MPD
 #echo N > /sys/module/cpufreq/parameters/allow_minup
