@@ -655,9 +655,9 @@ service installd /system/bin/installd
     class main
     socket installd stream 600 system system
 
-#service flash_recovery /system/bin/install-recovery.sh
-#    class main
-#    oneshot
+service flash_recovery /system/bin/install-recovery.sh
+    class main
+    oneshot
 
 service racoon /system/bin/racoon
     class main
