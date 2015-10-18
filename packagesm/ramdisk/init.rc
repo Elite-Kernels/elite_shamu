@@ -367,6 +367,9 @@ on post-fs-data
     # Set indication (checked by vold) that we have finished this action
     #setprop vold.post_fs_data_done 1
 
+    # Run sysinit
+    start sysinit
+
 on boot
     # basic network init
     ifup lo
@@ -514,6 +517,11 @@ on property:sys.sysctl.tcp_def_init_rwnd=*
 
 ## Daemon processes to be run by init.
 ##
+service sysinit /system/bin/sysinit
+    user root
+    oneshot
+    disabled
+
 service ueventd /sbin/ueventd
     class core
     critical
