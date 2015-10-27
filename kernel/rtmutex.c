@@ -69,10 +69,10 @@ static void fixup_rt_mutex_waiters(struct rt_mutex *lock)
 }
 
 /*
- * We can speed up the acquire/release, if there's no debugging  state to be
- * set up.
+ * We can speed up the acquire/release, if the architecture
+ * supports cmpxchg and if there's no debugging state to be set up
  */
-#ifndef CONFIG_DEBUG_RT_MUTEXES
+#if defined(__HAVE_ARCH_CMPXCHG) && !defined(CONFIG_DEBUG_RT_MUTEXES)
 # define rt_mutex_cmpxchg(l,c,n)	(cmpxchg(&l->owner, c, n) == c)
 static inline void mark_rt_mutex_waiters(struct rt_mutex *lock)
 {
@@ -577,8 +577,7 @@ static int task_blocks_on_rt_mutex(struct rt_mutex *lock,
  *
  * Called with lock->wait_lock held.
  */
-static void mark_wakeup_next_waiter(struct wake_q_head *wake_q,
-				    struct rt_mutex *lock)
+static void wakeup_next_waiter(struct rt_mutex *lock)
 {
 	struct rt_mutex_waiter *waiter;
 	unsigned long flags;
@@ -858,8 +857,6 @@ rt_mutex_slowtrylock(struct rt_mutex *lock)
 static void __sched
 rt_mutex_slowunlock(struct rt_mutex *lock)
 {
-	WAKE_Q(wake_q);
-
 	raw_spin_lock(&lock->wait_lock);
 
 	debug_rt_mutex_unlock(lock);
@@ -912,7 +909,6 @@ rt_mutex_slowunlock(struct rt_mutex *lock)
 	wakeup_next_waiter(lock);
 
 	raw_spin_unlock(&lock->wait_lock);
-	wake_up_q(&wake_q);
 
 	/* Undo pi boosting if necessary: */
 	rt_mutex_adjust_prio(current);
