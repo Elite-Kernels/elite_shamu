@@ -28,8 +28,7 @@
     cp -R "$t/anykernel.sh" out/$c
 
   y=$c-$today
-TOOLCHAIN=/home/brymaster5000/android/Toolchains/UBERTC/bin/arm-eabi-
-#TOOLCHAIN=/home/brymaster5000/android/Toolchains/linaro-4.9.3/bin/arm-cortex_a15-linux-gnueabihf-
+TOOLCHAIN=/home/brymaster5000/android/Toolchains/linaro-4.9.4/bin/arm-cortex_a15-linux-gnueabihf-
 export ARCH=arm
 export SUBARCH=arm
 
