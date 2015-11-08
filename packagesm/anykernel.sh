@@ -140,7 +140,7 @@ replace_file() {
 # set permissions for included files
 chmod -R 755 $ramdisk
 chmod 640 $ramdisk/fstab.shamu
-chmod 750 $ramdisk/init.rc
+#chmod 750 $ramdisk/init.rc
 chmod 750 $ramdisk/init.shamu.rc
 chmod 750 $ramdisk/init.shamu.power.rc
 
@@ -149,7 +149,7 @@ chmod 750 $ramdisk/init.shamu.power.rc
 # backup_file init.shamu.rc;
 # backup_file init.shamu.power.rc;
 replace_file fstab.shamu $ramdisk/fstab.shamu;
-replace_file init.rc $ramdisk/init.rc;
+#replace_file init.rc $ramdisk/init.rc;
 replace_file init.shamu.rc $ramdisk/init.shamu.rc;
 replace_file init.shamu.power.rc $ramdisk/init.shamu.power.rc;
 
