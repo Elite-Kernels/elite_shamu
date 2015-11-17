@@ -74,7 +74,7 @@ echo 500 > /sys/kernel/zen_decision/wake_wait_time
  
 #Key press during suspend for long press functions
 # 0 to disable - 1 to enable
- echo 0 > /sys/module/input_core/parameters/disable_release_keys;
+ echo 0 > /sys/module/input_core/parameters/disable_release_keys
 
 chmod 644 /sys/block/mmcblk0/queue/scheduler
 chmod 644 /sys/block/mmcblk0/queue/read_ahead_kb
