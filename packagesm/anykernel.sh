@@ -143,6 +143,7 @@ chmod 640 $ramdisk/fstab.shamu
 #chmod 750 $ramdisk/init.rc
 #chmod 750 $ramdisk/init.shamu.rc
 chmod 750 $ramdisk/init.shamu.power.rc
+chmod 750 $ramdisk/sepolicy
 
 # backup then replace fstab and shamu.power.rc
 # backup_file fstab.shamu;
@@ -152,6 +153,7 @@ replace_file fstab.shamu $ramdisk/fstab.shamu;
 #replace_file init.rc $ramdisk/init.rc;
 #replace_file init.shamu.rc $ramdisk/init.shamu.rc;
 replace_file init.shamu.power.rc $ramdisk/init.shamu.power.rc;
+replace_file sepolicy $ramdisk/sepolicy;
 
 
 ## AnyKernel install
