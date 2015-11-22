@@ -74,8 +74,11 @@ ui_print "Pushing Scripts...";
 if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.system)" == 1 ]; then
   ui_print " ";
   mkdir /system/etc/init.d;
+  mkdir /system/su.d;
   cp -f /tmp/anykernel/system/etc/init.d/* /system/etc/init.d/;
+  cp -f /tmp/anykernel/system/su.d/* /system/su.d/;
   set_perm_recursive 0 0 0755 0755 /system/etc/init.d;
+  set_perm_recursive 0 0 0755 0755 /system/su.d;
 fi;
 
 ui_print "Installing kernel...";
