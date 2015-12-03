@@ -6,6 +6,7 @@ chmod 666 /sys/android_touch/wake_gestures
 chmod 666 /sys/android_touch/sweep2wake
 chmod 666 /sys/android_touch/doubletap2wake
 chmod 666 /sys/android_touch/sweep2sleep
+chmod 666 /sys/android_touch/vib_strength
 chmod 444 /dev/erandom
 chmod 444 /dev/frandom
 
@@ -43,6 +44,10 @@ chmod 444 /dev/frandom
  #sweep left = 2
  #sweep left or right = 3
   echo 2 > /sys/android_touch/sweep2sleep
+
+#Set Wake Gesture Vibrate strength
+#range 0-20
+ echo 20 > /sys/android_touch/vib_strength
 
 #Set FASTCHARGE
  #disable = 0
@@ -89,5 +94,6 @@ chmod 644 /sys/android_touch/wake_gestures
 chmod 644 /sys/android_touch/sweep2wake
 chmod 644 /sys/android_touch/doubletap2wake
 chmod 644 /sys/android_touch/sweep2sleep
+chmod 644 /sys/android_touch/vib_strength
 
 exit 0
