@@ -122,6 +122,12 @@ config CPU_FREQ_DEFAULT_GOV_NIGHTMARE
 	select CPU_FREQ_GOV_NIGHTMARE
 	help
 
+config CPU_FREQ_DEFAULT_GOV_SMARTMAX
+	bool "smartmax"
+	select CPU_FREQ_GOV_SMARTMAX
+	help
+	  Use the CPUFreq governor 'smartmax' as default
+
 endchoice
 
 config CPU_FREQ_GOV_PERFORMANCE
@@ -242,6 +248,20 @@ config CPU_FREQ_GOV_ZZMOOVE
 config CPU_FREQ_GOV_NIGHTMARE
 	tristate "'nightmare' cpufreq governor"
 	depends on CPU_FREQ
+
+config CPU_FREQ_GOV_SMARTMAX
+	tristate "'smartmax' cpufreq policy governor"
+	select CPU_FREQ_TABLE
+	help
+	  'smartmax' combined ondemand and smartass2
+
+config CPU_FREQ_GOV_SMARTMAX_30
+	bool "'smartmax' for 3.0 and 3.1 kernels"
+	depends on CPU_FREQ_GOV_SMARTMAX
+
+config CPU_FREQ_GOV_SMARTMAX_SHAMU
+	bool "'smartmax' defaults for shamu"
+	depends on CPU_FREQ_GOV_SMARTMAX
 
 config CPU_BOOST
 	tristate "Event base short term CPU freq boost"
