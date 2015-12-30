@@ -32,7 +32,7 @@
 /*
  * Enable/Disable driver
  */
-unsigned int enabled = 1;
+unsigned int enabled = 0;
 
 /*
  * How long to wait to enable cores on wake (in ms)
