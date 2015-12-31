@@ -211,7 +211,7 @@ replace_line default.prop "ro.secure=1" "ro.secure=0";
 
 # init.rc
 # backup_file init.rc;
-append_file init.rc "run-parts" init;
+append_file init.rc "/system/elite" init;
 
 # end ramdisk changes
 
