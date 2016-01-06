@@ -470,7 +470,7 @@ static void cpufreq_smartmax_timer(struct smartmax_info_s *this_smartmax) {
 		cputime64_t cur_wall_time, cur_idle_time, cur_iowait_time;
 		unsigned int idle_time, wall_time, iowait_time;
 		unsigned int load, load_freq;
-		int freq_avg;
+		unsigned int freq_avg;
 
 		j_this_smartmax = &per_cpu(smartmax_info, j);
 
