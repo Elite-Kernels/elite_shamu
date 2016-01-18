@@ -30,7 +30,6 @@
 #include <linux/workqueue.h>
 #include <linux/kthread.h>
 #include <linux/slab.h>
-#include <linux/touchboost.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/cpufreq_interactive.h>
@@ -84,9 +83,6 @@ struct cpufreq_interactive_tunables {
 	spinlock_t target_loads_lock;
 	unsigned int *target_loads;
 	int ntarget_loads;
-#define DEFAULT_INPUT_BOOST_FREQ 1497600
-        unsigned int input_boost_freq;
-
 	/*
 	 * The minimum amount of time to spend at a frequency before we can ramp
 	 * down.
@@ -370,7 +366,7 @@ static void cpufreq_interactive_timer(unsigned long data)
 	do_div(cputime_speedadj, delta_time);
 	loadadjfreq = (unsigned int)cputime_speedadj * 100;
 	cpu_load = loadadjfreq / pcpu->policy->cur;
-	tunables->boosted = tunables->boost_val || now < (get_input_time() + tunables->boostpulse_duration_val);
+	tunables->boosted = tunables->boost_val || now < tunables->boostpulse_endtime;
 
 	if (cpu_load >= tunables->go_hispeed_load || tunables->boosted) {
 		if (pcpu->policy->cur < tunables->hispeed_freq) {
@@ -387,10 +383,7 @@ static void cpufreq_interactive_timer(unsigned long data)
 				pcpu->policy->cur < tunables->hispeed_freq)
 			new_freq = tunables->hispeed_freq;
 	}
-	
-	if (tunables->boosted)
- 		new_freq = tunables->input_boost_freq;
-	
+
 	if (pcpu->policy->cur >= tunables->hispeed_freq &&
 	    new_freq > pcpu->policy->cur &&
 	    now - pcpu->pol_hispeed_val_time <
@@ -965,25 +958,6 @@ static ssize_t store_io_is_busy(struct cpufreq_interactive_tunables *tunables,
 	return count;
 }
 
-static ssize_t show_input_boost_freq(struct cpufreq_interactive_tunables *tunables,
-				     char *buf)
- {
-         return sprintf(buf, "%u\n", tunables->input_boost_freq);
- }
-
-static ssize_t store_input_boost_freq(struct cpufreq_interactive_tunables *tunables, 
-                const char *buf, size_t count)
- {
-         int ret;
-         unsigned long val;
- 
-         ret = kstrtoul(buf, 0, &val);
-         if (ret < 0)
-                 return ret;
-         tunables->input_boost_freq = val;
-         return count;
- }
-
 /*
  * Create show/store routines
  * - sys: One governor instance for complete SYSTEM
@@ -1031,7 +1005,6 @@ show_store_gov_pol_sys(boost);
 store_gov_pol_sys(boostpulse);
 show_store_gov_pol_sys(boostpulse_duration);
 show_store_gov_pol_sys(io_is_busy);
-show_store_gov_pol_sys(input_boost_freq);
 
 #define gov_sys_attr_rw(_name)						\
 static struct global_attr _name##_gov_sys =				\
@@ -1055,13 +1028,13 @@ gov_sys_pol_attr_rw(timer_slack);
 gov_sys_pol_attr_rw(boost);
 gov_sys_pol_attr_rw(boostpulse_duration);
 gov_sys_pol_attr_rw(io_is_busy);
-gov_sys_pol_attr_rw(input_boost_freq);
 
 static struct global_attr boostpulse_gov_sys =
 	__ATTR(boostpulse, 0200, NULL, store_boostpulse_gov_sys);
 
 static struct freq_attr boostpulse_gov_pol =
 	__ATTR(boostpulse, 0200, NULL, store_boostpulse_gov_pol);
+
 /* One Governor instance for entire system */
 static struct attribute *interactive_attributes_gov_sys[] = {
 	&target_loads_gov_sys.attr,
@@ -1075,7 +1048,6 @@ static struct attribute *interactive_attributes_gov_sys[] = {
 	&boostpulse_gov_sys.attr,
 	&boostpulse_duration_gov_sys.attr,
 	&io_is_busy_gov_sys.attr,
-	&input_boost_freq_gov_sys.attr,
 	NULL,
 };
 
@@ -1083,9 +1055,6 @@ static struct attribute_group interactive_attr_group_gov_sys = {
 	.attrs = interactive_attributes_gov_sys,
 	.name = "interactive",
 };
-
-static struct global_attr input_boost_freq_attr = __ATTR(input_boost_freq, 0644,
-                 show_input_boost_freq, store_input_boost_freq);
 
 /* Per policy governor instance */
 static struct attribute *interactive_attributes_gov_pol[] = {
@@ -1100,7 +1069,6 @@ static struct attribute *interactive_attributes_gov_pol[] = {
 	&boostpulse_gov_pol.attr,
 	&boostpulse_duration_gov_pol.attr,
 	&io_is_busy_gov_pol.attr,
-	&input_boost_freq_attr.attr,
 	NULL,
 };
 
@@ -1175,7 +1143,6 @@ static int cpufreq_governor_interactive(struct cpufreq_policy *policy,
 		tunables->timer_rate = DEFAULT_TIMER_RATE;
 		tunables->boostpulse_duration_val = DEFAULT_MIN_SAMPLE_TIME;
 		tunables->timer_slack_val = DEFAULT_TIMER_SLACK;
-		tunables->input_boost_freq = DEFAULT_INPUT_BOOST_FREQ;
 
 		spin_lock_init(&tunables->target_loads_lock);
 		spin_lock_init(&tunables->above_hispeed_delay_lock);
