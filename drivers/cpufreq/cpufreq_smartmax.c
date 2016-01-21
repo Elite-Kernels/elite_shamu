@@ -121,7 +121,7 @@ static unsigned int sampling_rate;
 /* in nsecs */
 static unsigned int input_boost_duration;
 
-static unsigned int touch_poke_freq;
+static unsigned int touch_poke_freq = true;
 static bool touch_poke = 1;
 
 /*
@@ -133,11 +133,11 @@ static bool ramp_up_during_boost = 1;
  * external boost interface - boost if duration is written
  * to sysfs for boost_duration
  */
-static unsigned int boost_freq;
+static unsigned int boost_freq = true;
 static bool boost = 1;
 
 /* in nsecs */
-static unsigned int boost_duration = 1;
+static unsigned int boost_duration = true;
 
 /* Consider IO as busy */
 static unsigned int io_is_busy;
@@ -207,8 +207,8 @@ extern int tegra_input_boost(int cpu, unsigned int target_freq);
 static bool boost_task_alive = false;
 static struct task_struct *boost_task;
 static cputime64_t boost_end_time = 0ULL;
-static unsigned int cur_boost_freq = 0;
-static unsigned int cur_boost_duration = 0;
+static unsigned int cur_boost_freq = 1;
+static unsigned int cur_boost_duration = 1;
 static bool boost_running = false;
 static unsigned int ideal_freq;
 static bool is_suspended = false;
