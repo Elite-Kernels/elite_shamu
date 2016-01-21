@@ -53,16 +53,16 @@
 
 #ifdef CONFIG_CPU_FREQ_GOV_SMARTMAX_SHAMU
 #define DEFAULT_SUSPEND_IDEAL_FREQ 300000
-#define DEFAULT_AWAKE_IDEAL_FREQ 300000
+#define DEFAULT_AWAKE_IDEAL_FREQ 422400
 #define DEFAULT_RAMP_UP_STEP 200000
 #define DEFAULT_RAMP_DOWN_STEP 200000
 #define DEFAULT_MAX_CPU_LOAD 80
-#define DEFAULT_MIN_CPU_LOAD 40
+#define DEFAULT_MIN_CPU_LOAD 50
 #define DEFAULT_UP_RATE 30000
-#define DEFAULT_DOWN_RATE 60000
+#define DEFAULT_DOWN_RATE 80000
 #define DEFAULT_SAMPLING_RATE 10000
 // default to 3 * sampling_rate
-#define DEFAULT_INPUT_BOOST_DURATION 80000
+#define DEFAULT_INPUT_BOOST_DURATION 50000
 #define DEFAULT_TOUCH_POKE_FREQ 1497600
 #define DEFAULT_BOOST_FREQ 1728000
 /*
@@ -74,7 +74,7 @@
  * Mike Chan (androidlcom) calis this is also not true for ARM.
  */
 #define DEFAULT_IO_IS_BUSY 1
-#define DEFAULT_IGNORE_NICE 0
+#define DEFAULT_IGNORE_NICE 1
 #endif
 
 static unsigned int suspend_ideal_freq;
@@ -122,22 +122,22 @@ static unsigned int sampling_rate;
 static unsigned int input_boost_duration;
 
 static unsigned int touch_poke_freq;
-static bool touch_poke = true;
+static bool touch_poke = 1;
 
 /*
  * should ramp_up steps during boost be possible
  */
-static bool ramp_up_during_boost = true;
+static bool ramp_up_during_boost = 1;
 
 /*
  * external boost interface - boost if duration is written
  * to sysfs for boost_duration
  */
 static unsigned int boost_freq;
-static bool boost = true;
+static bool boost = 1;
 
 /* in nsecs */
-static unsigned int boost_duration = 0;
+static unsigned int boost_duration = 1;
 
 /* Consider IO as busy */
 static unsigned int io_is_busy;
