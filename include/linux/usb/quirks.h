@@ -35,4 +35,7 @@
 
 #define USB_QUIRK_OTG_PET		0x00000080
 
+/* device can't handle Link Power Management */
+#define USB_QUIRK_NO_LPM			BIT(10)
+
 #endif /* __LINUX_USB_QUIRKS_H */
