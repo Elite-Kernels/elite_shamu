@@ -28,7 +28,7 @@
 
   z=$c-$today
 
-TOOLCHAIN=/home/forrest/kernel/linaro-5.2/bin/arm-cortex_a15-linux-gnueabihf-
+TOOLCHAIN=/home/forrest/kernel/linaro-5.2/bin/arm-cortex-linux-gnueabi-
 export ARCH=arm
 export SUBARCH=arm
 
