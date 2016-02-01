@@ -28,7 +28,7 @@
 
   z=$c-$today
 
-TOOLCHAIN=/home/brymaster5000/android/Toolchains/linaro-5.3-custom/bin/arm-cortex_a15-linux-gnueabihf-
+TOOLCHAIN=/home/brymaster5000/android/Toolchains/linaro-5.2/bin/arm-cortex_a15-linux-gnueabihf-
 export ARCH=arm
 export SUBARCH=arm
 
