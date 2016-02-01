@@ -30,6 +30,9 @@ ui_print " ";
 mkdir -p /tmp/anykernel/bin;
 cd /tmp/anykernel;
 unzip -o "$ZIP";
+if [ $? != 0 -o -z "$(ls /tmp/anykernel/tools)" ]; then
+  abort "Unzip failed. Aborting...";
+fi;
 
 ui_print "$(file_getprop /tmp/anykernel/anykernel.sh kernel.string)";
 ui_print " ";
