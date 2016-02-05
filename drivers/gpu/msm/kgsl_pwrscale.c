@@ -316,13 +316,6 @@ int kgsl_devfreq_get_dev_status(struct device *dev,
 
 	stat->current_frequency = kgsl_pwrctrl_active_freq(&device->pwrctrl);
 
-	if (stat->private_data) {
-		struct xstats *b = (struct xstats *)stat->private_data;
-		b->ram_time = device->pwrscale.accum_stats.ram_time;
-		b->ram_wait = device->pwrscale.accum_stats.ram_wait;
-		b->mod = device->pwrctrl.bus_mod;
-	}
-
 	trace_kgsl_pwrstats(device, stat->total_time, &pwrscale->accum_stats);
 	memset(&pwrscale->accum_stats, 0, sizeof(pwrscale->accum_stats));
 
@@ -438,11 +431,7 @@ int kgsl_pwrscale_init(struct device *dev, const char *governor)
 	for (i = 0; i < (pwr->num_pwrlevels - 1); i++)
 		pwrscale->freq_table[out++] = pwr->pwrlevels[i].gpu_freq;
 
-	/*
-	 * Max_state is the number of valid power levels.
-	 * The valid power levels range from 0 - (max_state - 1)
-	 */
-	profile->max_state = pwr->num_pwrlevels - 1;
+	profile->max_state = out;
 	/* link storage array to the devfreq profile pointer */
 	profile->freq_table = pwrscale->freq_table;
 
