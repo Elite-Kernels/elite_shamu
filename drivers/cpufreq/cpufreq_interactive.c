@@ -1062,7 +1062,6 @@ static struct global_attr boostpulse_gov_sys =
 
 static struct freq_attr boostpulse_gov_pol =
 	__ATTR(boostpulse, 0200, NULL, store_boostpulse_gov_pol);
-
 /* One Governor instance for entire system */
 static struct attribute *interactive_attributes_gov_sys[] = {
 	&target_loads_gov_sys.attr,
@@ -1085,6 +1084,9 @@ static struct attribute_group interactive_attr_group_gov_sys = {
 	.name = "interactive",
 };
 
+static struct global_attr input_boost_freq_attr = __ATTR(input_boost_freq, 0644,
+                 show_input_boost_freq, store_input_boost_freq);
+
 /* Per policy governor instance */
 static struct attribute *interactive_attributes_gov_pol[] = {
 	&target_loads_gov_pol.attr,
@@ -1098,7 +1100,7 @@ static struct attribute *interactive_attributes_gov_pol[] = {
 	&boostpulse_gov_pol.attr,
 	&boostpulse_duration_gov_pol.attr,
 	&io_is_busy_gov_pol.attr,
-	&input_boost_freq_gov_pol.attr,
+	&input_boost_freq_attr.attr,
 	NULL,
 };
 
