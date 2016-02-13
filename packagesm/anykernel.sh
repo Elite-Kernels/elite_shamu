@@ -221,6 +221,7 @@ replace_line default.prop "ro.adb.secure=0" "ro.adb.secure=1";
 replace_line default.prop "ro.adb.secure=1" "ro.adb.secure=1";
 replace_line default.prop "ro.secure=0" "ro.secure=1";
 replace_line default.prop "ro.secure=1" "ro.secure=1";
+append_file default.prop ro.adb.secure=1 default
 
 # init.rc
 # backup_file init.rc;
