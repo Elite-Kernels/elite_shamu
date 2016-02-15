@@ -55,7 +55,7 @@ echo N > /sys/module/cpufreq/parameters/allow_minup
   echo 0 > /sys/kernel/fast_charge/force_fast_charge
 
 #Set IO read ahead
-echo "deadline" > /sys/block/mmcblk0/queue/scheduler
+echo "cfq" > /sys/block/mmcblk0/queue/scheduler
 echo "1536" > /sys/block/mmcblk0/queue/read_ahead_kb
 
 #Set CPU Min Frequencies
