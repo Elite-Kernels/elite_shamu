@@ -11,7 +11,7 @@ chmod 444 /dev/erandom
 chmod 444 /dev/frandom
 
 # Prevent min freq from being changed by MPD
-#echo N > /sys/module/cpufreq/parameters/allow_minup
+echo N > /sys/module/cpufreq/parameters/allow_minup
 
 # Prevent Thermal from changing max freq
 #echo N > /sys/module/msm_thermal/parameters/full_fm
