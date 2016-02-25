@@ -454,8 +454,7 @@ static int task_blocks_on_rt_mutex(struct rt_mutex *lock,
 /*
  * Wake up the next waiter on the lock.
  *
- * Remove the top waiter from the current tasks pi waiter list and
- * queue it up.
+ * Remove the top waiter from the current tasks waiter list and wake it up.
  *
  * Called with lock->wait_lock held.
  */
@@ -480,7 +479,7 @@ static void wakeup_next_waiter(struct rt_mutex *lock)
 
 	raw_spin_unlock_irqrestore(&current->pi_lock, flags);
 
-	wake_q_add(wake_q, waiter->task);
+	wake_up_process(waiter->task);
 }
 
 /*
@@ -714,13 +713,7 @@ rt_mutex_slowunlock(struct rt_mutex *lock)
 		return;
 	}
 
-	/*
-	 * The wakeup next waiter path does not suffer from the above
-	 * race. See the comments there.
-	 *
-	 * Queue the next waiter for wakeup once we release the wait_lock.
-	 */
-	mark_wakeup_next_waiter(&wake_q, lock);
+	wakeup_next_waiter(lock);
 
 	raw_spin_unlock(&lock->wait_lock);
 
