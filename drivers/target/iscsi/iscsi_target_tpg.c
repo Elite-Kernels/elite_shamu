@@ -175,16 +175,13 @@ void iscsit_put_tpg(struct iscsi_portal_group *tpg)
 
 static void iscsit_clear_tpg_np_login_thread(
 	struct iscsi_tpg_np *tpg_np,
-	struct iscsi_portal_group *tpg,
-	bool shutdown)
+	struct iscsi_portal_group *tpg)
 {
 	if (!tpg_np->tpg_np) {
 		pr_err("struct iscsi_tpg_np->tpg_np is NULL!\n");
 		return;
 	}
 
-	if (shutdown)
-		tpg_np->tpg_np->enabled = false;
 	iscsit_reset_np_thread(tpg_np->tpg_np, tpg_np, tpg);
 }
 
@@ -200,7 +197,7 @@ void iscsit_clear_tpg_np_login_threads(
 			continue;
 		}
 		spin_unlock(&tpg->tpg_np_lock);
-		iscsit_clear_tpg_np_login_thread(tpg_np, tpg, false);
+		iscsit_clear_tpg_np_login_thread(tpg_np, tpg);
 		spin_lock(&tpg->tpg_np_lock);
 	}
 	spin_unlock(&tpg->tpg_np_lock);
@@ -523,7 +520,7 @@ static int iscsit_tpg_release_np(
 	struct iscsi_portal_group *tpg,
 	struct iscsi_np *np)
 {
-	iscsit_clear_tpg_np_login_thread(tpg_np, tpg, true);
+	iscsit_clear_tpg_np_login_thread(tpg_np, tpg);
 
 	pr_debug("CORE[%s] - Removed Network Portal: %s:%hu,%hu on %s\n",
 		tpg->tpg_tiqn->tiqn, np->np_ip, np->np_port, tpg->tpgt,

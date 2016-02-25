@@ -270,7 +270,9 @@ do_page_fault(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 	struct task_struct *tsk;
 	struct mm_struct *mm;
 	int fault, sig, code;
-	unsigned int flags = FAULT_FLAG_ALLOW_RETRY | FAULT_FLAG_KILLABLE;
+	int write = fsr & FSR_WRITE;
+	unsigned int flags = FAULT_FLAG_ALLOW_RETRY | FAULT_FLAG_KILLABLE |
+				(write ? FAULT_FLAG_WRITE : 0);
 
 	if (notify_page_fault(regs, fsr))
 		return 0;
@@ -288,11 +290,6 @@ do_page_fault(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 	 */
 	if (in_atomic() || irqs_disabled() || !mm)
 		goto no_context;
-
-	if (user_mode(regs))
-		flags |= FAULT_FLAG_USER;
-	if (fsr & FSR_WRITE)
-		flags |= FAULT_FLAG_WRITE;
 
 	/*
 	 * As per x86, we may deadlock here.  However, since the kernel only
@@ -361,13 +358,6 @@ retry:
 	if (likely(!(fault & (VM_FAULT_ERROR | VM_FAULT_BADMAP | VM_FAULT_BADACCESS))))
 		return 0;
 
-	/*
-	 * If we are in kernel mode at this point, we
-	 * have no context to handle this fault with.
-	 */
-	if (!user_mode(regs))
-		goto no_context;
-
 	if (fault & VM_FAULT_OOM) {
 		/*
 		 * We ran out of memory, call the OOM killer, and return to
@@ -377,6 +367,13 @@ retry:
 		pagefault_out_of_memory();
 		return 0;
 	}
+
+	/*
+	 * If we are in kernel mode at this point, we
+	 * have no context to handle this fault with.
+	 */
+	if (!user_mode(regs))
+		goto no_context;
 
 	if (fault & VM_FAULT_SIGBUS) {
 		/*

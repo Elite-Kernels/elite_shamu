@@ -2,7 +2,6 @@
  * relocate_kernel.S - put the kernel image in place to boot
  */
 
-#include <linux/linkage.h>
 #include <asm/kexec.h>
 #ifdef CONFIG_KEXEC_HARDBOOT
 #include <asm/memory.h>
@@ -13,9 +12,8 @@
 #endif
 #endif
 
-	.align	3	/* not needed for this code, but keeps fncpy() happy */
-
-ENTRY(relocate_new_kernel)
+	.globl relocate_new_kernel
+relocate_new_kernel:
 
 	ldr	r0,kexec_indirection_page
 	ldr	r1,kexec_start_address

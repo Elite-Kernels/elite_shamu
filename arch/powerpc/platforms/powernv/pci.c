@@ -1,4 +1,3 @@
-
 /*
  * Support PCI/PCIe on PowerNV platforms
  *
@@ -48,8 +47,9 @@ static int pnv_msi_check_device(struct pci_dev* pdev, int nvec, int type)
 {
 	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
 	struct pnv_phb *phb = hose->private_data;
+	struct pci_dn *pdn = pci_get_pdn(pdev);
 
-	if (pdev->no_64bit_msi && !phb->msi32_support)
+	if (pdn && pdn->force_32bit_msi && !phb->msi32_support)
 		return -ENODEV;
 
 	return (phb && phb->msi_bmp.bitmap) ? 0 : -ENODEV;

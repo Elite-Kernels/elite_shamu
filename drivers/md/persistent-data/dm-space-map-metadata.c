@@ -493,9 +493,7 @@ static int sm_bootstrap_get_nr_blocks(struct dm_space_map *sm, dm_block_t *count
 {
 	struct sm_metadata *smm = container_of(sm, struct sm_metadata, sm);
 
-	*count = smm->ll.nr_blocks;
-
-	return 0;
+	return smm->ll.nr_blocks;
 }
 
 static int sm_bootstrap_get_nr_free(struct dm_space_map *sm, dm_block_t *count)

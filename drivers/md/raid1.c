@@ -94,7 +94,6 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
 	struct pool_info *pi = data;
 	struct r1bio *r1_bio;
 	struct bio *bio;
-	int need_pages;
 	int i, j;
 
 	r1_bio = r1bio_pool_alloc(gfp_flags, pi);
@@ -117,15 +116,15 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
 	 * RESYNC_PAGES for each bio.
 	 */
 	if (test_bit(MD_RECOVERY_REQUESTED, &pi->mddev->recovery))
-		need_pages = pi->raid_disks;
+		j = pi->raid_disks;
 	else
-		need_pages = 1;
-	for (j = 0; j < need_pages; j++) {
+		j = 1;
+	while(j--) {
 		bio = r1_bio->bios[j];
 		bio->bi_vcnt = RESYNC_PAGES;
 
 		if (bio_alloc_pages(bio, gfp_flags))
-			goto out_free_pages;
+			goto out_free_bio;
 	}
 	/* If not user-requests, copy the page pointers to all bios */
 	if (!test_bit(MD_RECOVERY_REQUESTED, &pi->mddev->recovery)) {
@@ -138,14 +137,6 @@ static void * r1buf_pool_alloc(gfp_t gfp_flags, void *data)
 	r1_bio->master_bio = NULL;
 
 	return r1_bio;
-
-out_free_pages:
-	while (--j >= 0) {
-		struct bio_vec *bv;
-
-		bio_for_each_segment_all(bv, r1_bio->bios[j], i)
-			__free_page(bv->bv_page);
-	}
 
 out_free_bio:
 	while (++j < pi->raid_disks)
@@ -327,7 +318,7 @@ static void raid1_end_read_request(struct bio *bio, int error)
 		spin_lock_irqsave(&conf->device_lock, flags);
 		if (r1_bio->mddev->degraded == conf->raid_disks ||
 		    (r1_bio->mddev->degraded == conf->raid_disks-1 &&
-		     test_bit(In_sync, &conf->mirrors[mirror].rdev->flags)))
+		     !test_bit(Faulty, &conf->mirrors[mirror].rdev->flags)))
 			uptodate = 1;
 		spin_unlock_irqrestore(&conf->device_lock, flags);
 	}
@@ -557,7 +548,7 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
 		if (test_bit(WriteMostly, &rdev->flags)) {
 			/* Don't balance among write-mostly, just
 			 * use the first as a last resort */
-			if (best_dist_disk < 0) {
+			if (best_disk < 0) {
 				if (is_badblock(rdev, this_sector, sectors,
 						&first_bad, &bad_sectors)) {
 					if (first_bad < this_sector)
@@ -566,8 +557,7 @@ static int read_balance(struct r1conf *conf, struct r1bio *r1_bio, int *max_sect
 					best_good_sectors = first_bad - this_sector;
 				} else
 					best_good_sectors = sectors;
-				best_dist_disk = disk;
-				best_pending_disk = disk;
+				best_disk = disk;
 			}
 			continue;
 		}
@@ -1382,7 +1372,6 @@ static void error(struct mddev *mddev, struct md_rdev *rdev)
 {
 	char b[BDEVNAME_SIZE];
 	struct r1conf *conf = mddev->private;
-	unsigned long flags;
 
 	/*
 	 * If it is not operational, then we have already marked it as dead
@@ -1402,17 +1391,18 @@ static void error(struct mddev *mddev, struct md_rdev *rdev)
 		return;
 	}
 	set_bit(Blocked, &rdev->flags);
-	spin_lock_irqsave(&conf->device_lock, flags);
 	if (test_and_clear_bit(In_sync, &rdev->flags)) {
+		unsigned long flags;
+		spin_lock_irqsave(&conf->device_lock, flags);
 		mddev->degraded++;
 		set_bit(Faulty, &rdev->flags);
+		spin_unlock_irqrestore(&conf->device_lock, flags);
+		/*
+		 * if recovery is running, make sure it aborts.
+		 */
+		set_bit(MD_RECOVERY_INTR, &mddev->recovery);
 	} else
 		set_bit(Faulty, &rdev->flags);
-	spin_unlock_irqrestore(&conf->device_lock, flags);
-	/*
-	 * if recovery is running, make sure it aborts.
-	 */
-	set_bit(MD_RECOVERY_INTR, &mddev->recovery);
 	set_bit(MD_CHANGE_DEVS, &mddev->flags);
 	printk(KERN_ALERT
 	       "md/raid1:%s: Disk failure on %s, disabling device.\n"
@@ -1466,10 +1456,7 @@ static int raid1_spare_active(struct mddev *mddev)
 	 * Find all failed disks within the RAID1 configuration 
 	 * and mark them readable.
 	 * Called under mddev lock, so rcu protection not needed.
-	 * device_lock used to avoid races with raid1_end_read_request
-	 * which expects 'In_sync' flags and ->degraded to be consistent.
 	 */
-	spin_lock_irqsave(&conf->device_lock, flags);
 	for (i = 0; i < conf->raid_disks; i++) {
 		struct md_rdev *rdev = conf->mirrors[i].rdev;
 		struct md_rdev *repl = conf->mirrors[conf->raid_disks + i].rdev;
@@ -1499,6 +1486,7 @@ static int raid1_spare_active(struct mddev *mddev)
 			sysfs_notify_dirent_safe(rdev->sysfs_state);
 		}
 	}
+	spin_lock_irqsave(&conf->device_lock, flags);
 	mddev->degraded -= count;
 	spin_unlock_irqrestore(&conf->device_lock, flags);
 
@@ -2054,7 +2042,7 @@ static void fix_read_error(struct r1conf *conf, int read_disk,
 			d--;
 			rdev = conf->mirrors[d].rdev;
 			if (rdev &&
-			    !test_bit(Faulty, &rdev->flags))
+			    test_bit(In_sync, &rdev->flags))
 				r1_sync_page_io(rdev, sect, s,
 						conf->tmppage, WRITE);
 		}
@@ -2066,7 +2054,7 @@ static void fix_read_error(struct r1conf *conf, int read_disk,
 			d--;
 			rdev = conf->mirrors[d].rdev;
 			if (rdev &&
-			    !test_bit(Faulty, &rdev->flags)) {
+			    test_bit(In_sync, &rdev->flags)) {
 				if (r1_sync_page_io(rdev, sect, s,
 						    conf->tmppage, READ)) {
 					atomic_add(s, &rdev->corrected_errors);
