@@ -2291,6 +2291,7 @@ int snd_usbmidi_create(struct snd_card *card,
 	else
 		err = snd_usbmidi_create_endpoints(umidi, endpoints);
 	if (err < 0) {
+		snd_usbmidi_free(umidi);
 		return err;
 	}
 
