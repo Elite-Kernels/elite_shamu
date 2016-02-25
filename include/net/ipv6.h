@@ -487,7 +487,6 @@ struct ip6_create_arg {
 	u32 user;
 	const struct in6_addr *src;
 	const struct in6_addr *dst;
-	int iif;
 	u8 ecn;
 };
 
