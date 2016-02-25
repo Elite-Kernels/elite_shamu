@@ -1533,7 +1533,8 @@ SCTP_STATIC void sctp_close(struct sock *sk, long timeout)
 			struct sctp_chunk *chunk;
 
 			chunk = sctp_make_abort_user(asoc, NULL, 0);
-			sctp_primitive_ABORT(net, asoc, chunk);
+			if (chunk)
+				sctp_primitive_ABORT(net, asoc, chunk);
 		} else
 			sctp_primitive_SHUTDOWN(net, asoc, NULL);
 	}
