@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -666,17 +666,19 @@ static int check_wr_packing_statistics(struct test_data *td)
 {
 	struct mmc_wr_pack_stats *mmc_packed_stats;
 	struct mmc_queue *mq = td->req_q->queuedata;
-	int max_packed_reqs = mq->card->ext_csd.max_packed_writes;
+	int max_packed_reqs;
 	int i;
-	struct mmc_card *card = mq->card;
+	struct mmc_card *card;
 	struct mmc_wr_pack_stats expected_stats;
 	int *stop_reason;
 	int ret = 0;
 
-	if (!mq) {
-		pr_err("%s: NULL mq", __func__);
+	if (!mq || !mq->card) {
+		pr_err("%s: mq or mq->card are NULL", __func__);
 		return -EINVAL;
 	}
+	max_packed_reqs = mq->card->ext_csd.max_packed_writes;
+	card = mq->card;
 
 	expected_stats = mbtd->exp_packed_stats;
 
@@ -1210,9 +1212,15 @@ static int prepare_partial_followed_by_abort(struct test_data *td,
 	int i, start_address;
 	int is_err_expected = 0;
 	int ret = 0;
-	struct mmc_queue *mq = test_iosched_get_req_queue()->queuedata;
+	struct request_queue *q = test_iosched_get_req_queue();
+	struct mmc_queue *mq;
 	int max_packed_reqs;
 
+	if (!q) {
+		pr_err("%s: NULL q", __func__);
+		return -EINVAL;
+	}
+	mq = q->queuedata;
 	if (!mq) {
 		pr_err("%s: NULL mq", __func__);
 		return -EINVAL;
@@ -1335,6 +1343,7 @@ static int prepare_long_read_test_requests(struct test_data *td)
 	int ret;
 	int start_sec;
 	int j;
+	unsigned long read_test_no_req = LONG_READ_TEST_ACTUAL_NUM_REQS;
 
 	if (td)
 		start_sec = td->start_sector;
@@ -1343,8 +1352,8 @@ static int prepare_long_read_test_requests(struct test_data *td)
 		return -EINVAL;
 	}
 
-	pr_info("%s: Adding %d read requests, first req_id=%d", __func__,
-		     LONG_READ_TEST_ACTUAL_NUM_REQS, td->wr_rd_next_req_id);
+	pr_info("%s: Adding %lu read requests, first req_id=%d", __func__,
+		     read_test_no_req, td->wr_rd_next_req_id);
 
 	for (j = 0; j < LONG_READ_TEST_ACTUAL_NUM_REQS; j++) {
 
@@ -1372,17 +1381,27 @@ static int prepare_long_read_test_requests(struct test_data *td)
  */
 static int prepare_test(struct test_data *td)
 {
-	struct mmc_queue *mq = test_iosched_get_req_queue()->queuedata;
+	struct request_queue *q;
+	struct mmc_queue *mq;
 	int max_num_requests;
 	int num_requests = 0;
 	int ret = 0;
 	int is_random = mbtd->is_random;
-	int test_packed_trigger = mq->num_wr_reqs_to_start_packing;
+	int test_packed_trigger;
 
+	q = test_iosched_get_req_queue();
+	if (!q) {
+		pr_err("%s: q is NULL", __func__);
+		return -EINVAL;
+	}
+
+	mq = q->queuedata;
 	if (!mq) {
 		pr_err("%s: NULL mq", __func__);
 		return -EINVAL;
 	}
+
+	test_packed_trigger = mq->num_wr_reqs_to_start_packing;
 
 	max_num_requests = mq->card->ext_csd.max_packed_writes;
 
@@ -2218,7 +2237,7 @@ static ssize_t send_write_packing_test_read(struct file *file,
 			       loff_t *offset)
 {
 	if (!access_ok(VERIFY_WRITE, buffer, count))
-		return count;
+		return -EFAULT;
 
 	memset((void *)buffer, 0, count);
 
@@ -2319,7 +2338,7 @@ static ssize_t err_check_test_read(struct file *file,
 			       loff_t *offset)
 {
 	if (!access_ok(VERIFY_WRITE, buffer, count))
-		return count;
+		return -EFAULT;
 
 	memset((void *)buffer, 0, count);
 
@@ -2430,7 +2449,7 @@ static ssize_t send_invalid_packed_test_read(struct file *file,
 			       loff_t *offset)
 {
 	if (!access_ok(VERIFY_WRITE, buffer, count))
-		return count;
+		return -EFAULT;
 
 	memset((void *)buffer, 0, count);
 
@@ -2477,11 +2496,26 @@ static ssize_t write_packing_control_test_write(struct file *file,
 	int i = 0;
 	int number = -1;
 	int j = 0;
-	struct mmc_queue *mq = test_iosched_get_req_queue()->queuedata;
-	int max_num_requests = mq->card->ext_csd.max_packed_writes;
+	struct request_queue *q;
+	struct mmc_queue *mq;
+	int max_num_requests;
 	int test_successful = 1;
 
 	pr_info("%s: -- write_packing_control TEST --", __func__);
+
+	q = test_iosched_get_req_queue();
+	if (!q) {
+		pr_err("%s: q is NULL", __func__);
+		return -EINVAL;
+	}
+
+	mq = q->queuedata;
+	if (!mq) {
+		pr_err("%s: NULL mq", __func__);
+		return -EINVAL;
+	}
+
+	max_num_requests = mq->card->ext_csd.max_packed_writes;
 
 	sscanf(buf, "%d", &number);
 
@@ -2547,7 +2581,7 @@ static ssize_t write_packing_control_test_read(struct file *file,
 			       loff_t *offset)
 {
 	if (!access_ok(VERIFY_WRITE, buffer, count))
-		return count;
+		return -EFAULT;
 
 	memset((void *)buffer, 0, count);
 
@@ -2632,7 +2666,7 @@ static ssize_t bkops_test_read(struct file *file,
 			       loff_t *offset)
 {
 	if (!access_ok(VERIFY_WRITE, buffer, count))
-		return count;
+		return -EFAULT;
 
 	memset((void *)buffer, 0, count);
 
@@ -2665,6 +2699,10 @@ static ssize_t long_sequential_read_test_write(struct file *file,
 	int i = 0;
 	int number = -1;
 	unsigned long mtime, integer, fraction;
+	unsigned long test_size_integer, test_size_fraction;
+
+	test_size_integer = LONG_TEST_SIZE_INTEGER(LONG_READ_NUM_BYTES);
+	test_size_fraction = LONG_TEST_SIZE_FRACTION(LONG_READ_NUM_BYTES);
 
 	pr_info("%s: -- Long Sequential Read TEST --", __func__);
 
@@ -2692,10 +2730,8 @@ static ssize_t long_sequential_read_test_write(struct file *file,
 
 		mtime = ktime_to_ms(mbtd->test_info.test_duration);
 
-		pr_info("%s: time is %lu msec, size is %u.%u MiB",
-			__func__, mtime,
-			LONG_TEST_SIZE_INTEGER(LONG_READ_NUM_BYTES),
-			LONG_TEST_SIZE_FRACTION(LONG_READ_NUM_BYTES));
+		pr_info("%s: time is %lu msec, size is %lu.%lu MiB",
+			__func__, mtime, test_size_integer, test_size_fraction);
 
 		/* we first multiply in order not to lose precision */
 		mtime *= MB_MSEC_RATIO_APPROXIMATION;
@@ -2723,7 +2759,7 @@ static ssize_t long_sequential_read_test_read(struct file *file,
 			       loff_t *offset)
 {
 	if (!access_ok(VERIFY_WRITE, buffer, count))
-		return count;
+		return -EFAULT;
 
 	memset((void *)buffer, 0, count);
 
@@ -2886,7 +2922,7 @@ static ssize_t long_sequential_write_test_read(struct file *file,
 			       loff_t *offset)
 {
 	if (!access_ok(VERIFY_WRITE, buffer, count))
-		return count;
+		return -EFAULT;
 
 	memset((void *)buffer, 0, count);
 
@@ -2962,7 +2998,7 @@ static ssize_t new_req_notification_test_read(struct file *file,
 			       loff_t *offset)
 {
 	if (!access_ok(VERIFY_WRITE, buffer, count))
-		return count;
+		return -EFAULT;
 
 	memset((void *)buffer, 0, count);
 

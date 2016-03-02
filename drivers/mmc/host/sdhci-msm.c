@@ -180,8 +180,8 @@ enum sdc_mpm_pin_state {
 #define CORE_SDCC_DEBUG_REG	0x124
 #define CORE_DEBUG_REG_AHB_HTRANS       (3 << 12)
 
-/* 8KB descriptors */
-#define SDHCI_MSM_MAX_SEGMENTS  (1 << 13)
+/* 512 descriptors */
+#define SDHCI_MSM_MAX_SEGMENTS  (1 << 9)
 #define SDHCI_MSM_MMC_CLK_GATE_DELAY	200 /* msecs */
 
 #define CORE_FREQ_100MHZ	(100 * 1000 * 1000)
@@ -190,6 +190,12 @@ enum sdc_mpm_pin_state {
 
 #define sdhci_is_valid_mpm_wakeup_int(_h) ((_h)->pdata->mpm_sdiowakeup_int >= 0)
 #define sdhci_is_valid_gpio_wakeup_int(_h) ((_h)->pdata->sdiowakeup_irq >= 0)
+
+#define NUM_TUNING_PHASES		16
+#define MAX_DRV_TYPES_SUPPORTED_HS200	3
+
+/* Timeout value to avoid infinite waiting for pwr_irq */
+#define MSM_PWR_IRQ_TIMEOUT_MS 5000
 
 static const u32 tuning_block_64[] = {
 	0x00FF0FFF, 0xCCC3CCFF, 0xFFCC3CC3, 0xEFFEFFFE,
@@ -2451,8 +2457,10 @@ static void sdhci_msm_check_power_status(struct sdhci_host *host, u32 req_type)
 	 */
 	if (done)
 		init_completion(&msm_host->pwr_irq_completion);
-	else
-		wait_for_completion(&msm_host->pwr_irq_completion);
+	else if (!wait_for_completion_timeout(&msm_host->pwr_irq_completion,
+				msecs_to_jiffies(MSM_PWR_IRQ_TIMEOUT_MS)))
+		__WARN_printf("%s: request(%d) timed out waiting for pwr_irq\n",
+					mmc_hostname(host->mmc), req_type);
 
 	pr_debug("%s: %s: request %d done\n", mmc_hostname(host->mmc),
 			__func__, req_type);
@@ -2560,7 +2568,16 @@ out:
 	return rc;
 }
 
+static void sdhci_msm_cfg_power_irq(struct sdhci_host *host, bool enable)
+{
+	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
+	struct sdhci_msm_host *msm_host = pltfm_host->priv;
 
+	if (enable)
+		enable_irq(msm_host->pwr_irq);
+	else
+		disable_irq(msm_host->pwr_irq);
+}
 
 static int sdhci_msm_prepare_clocks(struct sdhci_host *host, bool enable)
 {
@@ -3161,6 +3178,7 @@ static struct sdhci_ops sdhci_msm_ops = {
 	.dump_vendor_regs = sdhci_msm_dump_vendor_regs,
 	.config_auto_tuning_cmd = sdhci_msm_config_auto_tuning_cmd,
 	.enable_controller_clock = sdhci_msm_enable_controller_clock,
+	.cfg_power_irq = sdhci_msm_cfg_power_irq,
 };
 
 static int sdhci_msm_cfg_mpm_pin_wakeup(struct sdhci_host *host, unsigned mode)
@@ -3358,6 +3376,10 @@ static int sdhci_msm_probe(struct platform_device *pdev)
 	/* Reset the core and Enable SDHC mode */
 	core_memres = platform_get_resource_byname(pdev,
 				IORESOURCE_MEM, "core_mem");
+	if (!core_memres) {
+		dev_err(&pdev->dev, "Failed to get iomem resource\n");
+		goto vreg_deinit;
+	}
 	msm_host->core_mem = devm_ioremap(&pdev->dev, core_memres->start,
 					resource_size(core_memres));
 
@@ -3500,6 +3522,13 @@ static int sdhci_msm_probe(struct platform_device *pdev)
 	init_completion(&msm_host->pwr_irq_completion);
 
 	if (gpio_is_valid(msm_host->pdata->status_gpio)) {
+		/*
+		 * Set up the card detect GPIO in active configuration before
+		 * configuring it as an IRQ. Otherwise, it can be in some
+		 * weird/inconsistent state resulting in flood of interrupts.
+		 */
+		sdhci_msm_setup_pins(msm_host->pdata, true);
+
 		ret = mmc_gpio_request_cd(msm_host->mmc,
 				msm_host->pdata->status_gpio);
 		if (ret) {
