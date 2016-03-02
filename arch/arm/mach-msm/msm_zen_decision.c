@@ -25,20 +25,20 @@
 #include <linux/platform_device.h>
 #include <linux/workqueue.h>
 #include <linux/power_supply.h>
+#include <linux/cpuset.h>
 
 #define ZEN_DECISION "zen_decision"
 
 /*
  * Enable/Disable driver
  */
-unsigned int enabled = 1;
+unsigned int enabled = 0;
 
 /*
  * How long to wait to enable cores on wake (in ms)
  */
 #define WAKE_WAIT_TIME_MAX 60000 // 1 minute maximum
 unsigned int wake_wait_time = 1000;
->>>>>>> d0248c3... msm: zen_decision v2.0
 
 /*
  * Battery level threshold to ignore UP operations.
