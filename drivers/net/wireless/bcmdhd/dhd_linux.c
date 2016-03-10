@@ -170,6 +170,12 @@ static u32 vendor_oui = CONFIG_DHD_SET_RANDOM_MAC_VAL;
 #endif
 
 #include <wl_android.h>
+#include <linux/moduleparam.h>
+
+static int wlrx_divide = 1;
+static int wlctrl_divide = 1;
+module_param(wlrx_divide, int, 0644);
+module_param(wlctrl_divide, int, 0644);
 
 /* Maximum STA per radio */
 #define DHD_MAX_STA     32
@@ -700,7 +706,7 @@ static int dhd_toe_get(dhd_info_t *dhd, int idx, uint32 *toe_ol);
 static int dhd_toe_set(dhd_info_t *dhd, int idx, uint32 toe_ol);
 #endif /* TOE */
 
-static int dhd_wl_host_event(dhd_info_t *dhd, int *ifidx, void *pktdata,
+static int dhd_wl_host_event(dhd_info_t *dhd, int *ifidx, void *pktdata, size_t pktlen,
                              wl_event_msg_t *event_ptr, void **data_ptr);
 #ifdef DHD_UNICAST_DHCP
 static const uint8 llc_snap_hdr[SNAP_HDR_LEN] = {0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00};
@@ -3027,6 +3033,7 @@ dhd_rx_frame(dhd_pub_t *dhdp, int ifidx, void *pktbuf, int numpkt, uint8 chan,
 #else
 			skb->mac.raw,
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 22) */
+			len - 2,
 			&event,
 			&data);
 
@@ -7439,16 +7446,18 @@ dhd_get_wireless_stats(struct net_device *dev)
 #endif /* defined(WL_WIRELESS_EXT) */
 
 static int
-dhd_wl_host_event(dhd_info_t *dhd, int *ifidx, void *pktdata,
+dhd_wl_host_event(dhd_info_t *dhd, int *ifidx, void *pktdata, size_t pktlen,
 	wl_event_msg_t *event, void **data)
 {
 	int bcmerror = 0;
 	ASSERT(dhd != NULL);
 
 #ifdef SHOW_LOGTRACE
-		bcmerror = wl_host_event(&dhd->pub, ifidx, pktdata, event, data, &dhd->event_data);
+		bcmerror = wl_host_event(&dhd->pub, ifidx, pktdata, pktlen,
+				event, data, &dhd->event_data);
 #else
-		bcmerror = wl_host_event(&dhd->pub, ifidx, pktdata, event, data, NULL);
+		bcmerror = wl_host_event(&dhd->pub, ifidx, pktdata, pktlen,
+				event, data, NULL);
 #endif /* SHOW_LOGTRACE */
 
 	if (bcmerror != BCME_OK)
@@ -8852,10 +8861,10 @@ int dhd_os_wake_lock_timeout(dhd_pub_t *pub)
 #ifdef CONFIG_HAS_WAKELOCK
 		if (dhd->wakelock_rx_timeout_enable)
 			wake_lock_timeout(&dhd->wl_rxwake,
-				msecs_to_jiffies(dhd->wakelock_rx_timeout_enable));
+				msecs_to_jiffies(dhd->wakelock_rx_timeout_enable)/wlrx_divide);
 		if (dhd->wakelock_ctrl_timeout_enable)
 			wake_lock_timeout(&dhd->wl_ctrlwake,
-				msecs_to_jiffies(dhd->wakelock_ctrl_timeout_enable));
+				msecs_to_jiffies(dhd->wakelock_ctrl_timeout_enable)/wlctrl_divide);
 #endif
 		dhd->wakelock_rx_timeout_enable = 0;
 		dhd->wakelock_ctrl_timeout_enable = 0;

@@ -57,7 +57,7 @@ static atomic_t kp_taiko_priv;
 static int spkr_drv_wrnd_param_set(const char *val,
 				   const struct kernel_param *kp);
 static int spkr_drv_wrnd = 1;
-static int high_perf_mode;
+int high_perf_mode = 1;
 module_param(high_perf_mode, int,
 			S_IRUGO | S_IWUSR | S_IWGRP);
 MODULE_PARM_DESC(high_perf_mode, "enable/disable class AB config for hph");
@@ -2221,7 +2221,7 @@ static int slim_tx_mixer_put(struct snd_kcontrol *kcontrol,
 				if (wcd9xxx_tx_vport_validation(
 						vtable,
 						port_id,
-						taiko_p->dai)) {
+						taiko_p->dai, NUM_CODEC_DAIS)) {
 					dev_dbg(codec->dev, "%s: TX%u is used by other virtual port\n",
 						__func__, port_id + 1);
 					mutex_unlock(&codec->mutex);

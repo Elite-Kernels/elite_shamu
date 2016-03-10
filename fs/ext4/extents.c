@@ -1722,7 +1722,8 @@ static void ext4_ext_try_to_merge_up(handle_t *handle,
 
 	brelse(path[1].p_bh);
 	ext4_free_blocks(handle, inode, NULL, blk, 1,
-			 EXT4_FREE_BLOCKS_METADATA | EXT4_FREE_BLOCKS_FORGET);
+			 EXT4_FREE_BLOCKS_METADATA | EXT4_FREE_BLOCKS_FORGET |
+			 EXT4_FREE_BLOCKS_RESERVE);
 }
 
 /*
@@ -2506,7 +2507,9 @@ ext4_ext_rm_leaf(handle_t *handle, struct inode *inode,
 		return -EIO;
 	}
 	/* find where to start removing */
-	ex = EXT_LAST_EXTENT(eh);
+	ex = path[depth].p_ext;
+	if (!ex)
+		ex = EXT_LAST_EXTENT(eh);
 
 	ex_ee_block = le32_to_cpu(ex->ee_block);
 	ex_ee_len = ext4_ext_get_actual_len(ex);
