@@ -69,7 +69,7 @@ ui_print " ";
 ui_print "Mounting System";
 ui_print " ";
 ui_print " ";
-mount /system;
+mount -o ro /system;
 mount /data;
 
 if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.devicecheck)" == 1 ]; then
@@ -91,6 +91,7 @@ fi;
 ui_print "Pushing Scripts...";
 if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.system)" == 1 ]; then
   ui_print " ";
+  mount -o remount,rw /system;
   if [ -d "$system/elite" ]
   then  
     cp -rf /tmp/anykernel/system/elite/* /system/elite/;

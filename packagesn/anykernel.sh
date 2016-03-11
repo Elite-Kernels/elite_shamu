@@ -225,6 +225,7 @@ dump_boot;
 
 # init.rc
 # backup_file init.rc;
+append_file init.shamu.rc "/system/elite" init;
 append_file init.rc "/system/elite" init;
 
 # end ramdisk changes
