@@ -1,3 +1,6 @@
-# Execute Elite.sh
-on boot
-    exec - root root system -- /system/elite/Elite.sh
+# Execute files in /su.d before booting
+service userinit /system/xbin/busybox run-parts /system/su.d
+    oneshot
+    class late_start
+    user root
+    group root
