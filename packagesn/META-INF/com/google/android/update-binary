@@ -92,20 +92,21 @@ ui_print "Pushing Scripts...";
 if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.system)" == 1 ]; then
   ui_print " ";
   mount -o remount,rw /system;
-  if [ -d "$system/su.d" ]
+  if [ -d "$system/elite" ]
   then  
-    cp -rf /tmp/anykernel/system/su.d/* /system/su.d/;
-    set_perm_recursive 0 0 0755 0755 /system/su.d;
+    cp -rf /tmp/anykernel/system/elite/* /system/elite/;
+    set_perm_recursive 0 0 0755 0755 /system/elite;
   else
-    mkdir /system/su.d;
-    cp -rf /tmp/anykernel/system/su.d/* /system/su.d/;
-    set_perm_recursive 0 0 0755 0755 /system/su.d;
+    mkdir /system/elite;
+    cp -rf /tmp/anykernel/system/elite/* /system/elite/;
+    set_perm_recursive 0 0 0755 0755 /system/elite;
   fi;
 fi;
 
 ui_print "Cleaning up";
 rm /system/etc/init.d/92Elite;
-rm /system/elite/Elite.sh;
+rm /system/su.d/Elite.sh;
+rm /verity_key;
 
 sleep 0.25;
 ui_print "Installing kernel...";
