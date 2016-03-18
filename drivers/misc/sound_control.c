@@ -12,8 +12,85 @@
 #include "../../sound/soc/codecs/wcd9xxx-common.h"
 
 #define SOUNDCONTROL_VERSION 0
-
+extern void update_headphones_volume_boost(int vol_boost);
+extern void update_mic_gain(int vol_boost);
 extern int high_perf_mode;
+
+/*
+ * Volume boost value
+ */
+int headphones_boost = 0;
+int headphones_boost_limit = 20;
+int headphones_boost_limit_min = -20;
+
+/*
+ * Mic boost value
+ */
+int mic_boost = 0;
+int mic_boost_limit = 20;
+int mic_boost_limit_min = -20;
+
+/*
+ * Sysfs get/set entries
+ */
+ 
+static ssize_t headphones_boost_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d\n", headphones_boost);
+}
+
+static ssize_t headphones_boost_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t size)
+{
+	int new_val;
+
+	sscanf(buf, "%d", &new_val);
+
+	if (new_val != headphones_boost) {
+		if (new_val <= headphones_boost_limit_min)
+			new_val = headphones_boost_limit_min;
+
+		else if (new_val >= headphones_boost_limit)
+			new_val = headphones_boost_limit;
+
+		pr_info("New headphones_boost: %d\n", new_val);
+
+		headphones_boost = new_val;
+		update_headphones_volume_boost(headphones_boost);
+	}
+
+	return size;
+}
+
+static ssize_t mic_boost_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d\n", mic_boost);
+}
+
+static ssize_t mic_boost_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t size)
+{
+	int new_val;
+
+	sscanf(buf, "%d", &new_val);
+
+	if (new_val != mic_boost) {
+		if (new_val <= mic_boost_limit_min)
+			new_val = mic_boost_limit_min;
+
+		else if (new_val >= mic_boost_limit)
+			new_val = mic_boost_limit;
+
+		pr_info("New mic_boost: %d\n", new_val);
+
+		mic_boost = new_val;
+		update_mic_gain(mic_boost);
+	}
+
+	return size;
+}
 
 static ssize_t hph_perf_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
@@ -40,11 +117,16 @@ static ssize_t soundcontrol_version(struct device * dev, struct device_attribute
     return sprintf(buf, "%d\n", SOUNDCONTROL_VERSION);
 }
 
+static DEVICE_ATTR(volume_boost, 0664, headphones_boost_show,
+	headphones_boost_store);
+static DEVICE_ATTR(mic_boost, 0664, mic_boost_show, mic_boost_store);
 static DEVICE_ATTR(highperf_enabled, 0664, hph_perf_show, hph_perf_store);
 static DEVICE_ATTR(version, 0664 , soundcontrol_version, NULL);
 
-static struct attribute *soundcontrol_attributes[] = 
+static struct attribute *soundcontrol_attributes[] =
 {
+	&dev_attr_volume_boost.attr,
+	&dev_attr_mic_boost.attr,
 	&dev_attr_highperf_enabled.attr,
 	&dev_attr_version.attr,
 	NULL
