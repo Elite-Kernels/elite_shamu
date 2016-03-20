@@ -1,5 +1,5 @@
 # Execute files in /system/elite before booting
-service elite /system/Elite.sh
+service elite /sbin/elite.sh
     class late_start
     user root
     group root
@@ -7,4 +7,4 @@ service elite /system/Elite.sh
     oneshot
 
 on property:sys.boot_completed=1
-    start 
+    start elite
