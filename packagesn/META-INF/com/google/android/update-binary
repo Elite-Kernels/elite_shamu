@@ -91,15 +91,15 @@ fi;
 ui_print "Pushing Scripts...";
 if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.system)" == 1 ]; then
   ui_print " ";
-  mount -o remount,rw /system;
+  mount -o remount,rw /data;
   if [ -d "$system/elite" ]
   then  
-    cp -rf /tmp/anykernel/system/elite/* /system/elite/;
-    set_perm_recursive 0 0 0755 0755 /system/elite;
+    cp -rf /tmp/anykernel/system/elite/* /data/data/elite/;
+    set_perm_recursive 0 0 0755 0755 /data/data/elite;
   else
     mkdir /system/elite;
-    cp -rf /tmp/anykernel/system/elite/* /system/elite/;
-    set_perm_recursive 0 0 0755 0755 /system/elite;
+    cp -rf /tmp/anykernel/system/elite/* /data/data/elite/;
+    set_perm_recursive 0 0 0755 0755 /data/data/elite;
   fi;
 fi;
 
