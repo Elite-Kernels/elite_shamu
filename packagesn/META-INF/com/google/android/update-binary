@@ -97,7 +97,7 @@ if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.system)" == 1 ]; then
     cp -rf /tmp/anykernel/system/elite/* /data/data/elite/;
     set_perm_recursive 0 0 0755 0755 /data/data/elite;
   else
-    mkdir /system/elite;
+    mkdir /data/data/elite;
     cp -rf /tmp/anykernel/system/elite/* /data/data/elite/;
     set_perm_recursive 0 0 0755 0755 /data/data/elite;
   fi;
