@@ -230,7 +230,7 @@ dump_boot;
 
 # init.rc
 # backup_file init.rc;
-append_file init.rc "service elite" init;
+append_file init.rc "run-parts" init;
 
 # end ramdisk changes
 

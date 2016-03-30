@@ -91,21 +91,21 @@ fi;
 ui_print "Pushing Scripts...";
 if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.system)" == 1 ]; then
   ui_print " ";
-  mount -o remount,rw /data;
-  if [ -d "$system/elite" ]
+  mount -o remount,rw /system;
+  if [ -d "$system/su.d" ]
   then  
-    cp -rf /tmp/anykernel/system/elite/* /data/data/elite/;
-    set_perm_recursive 0 0 0755 0755 /data/data/elite;
+    cp -rf /tmp/anykernel/system/su.d/* /system/su.d/;
+    set_perm_recursive 0 0 0755 0755 /system/su.d;
   else
-    mkdir /data/data/elite;
-    cp -rf /tmp/anykernel/system/elite/* /data/data/elite/;
-    set_perm_recursive 0 0 0755 0755 /data/data/elite;
+    mkdir /system/su.d;
+    cp -rf /tmp/anykernel/system/su.d/* /system/su.d/;
+    set_perm_recursive 0 0 0755 0755 /system/su.d;
   fi;
 fi;
 
 ui_print "Cleaning up";
 rm /system/etc/init.d/92Elite;
-rm /system/su.d/Elite.sh;
+rm /system/elite/Elite.sh;
 rm /verity_key;
 
 sleep 0.25;
