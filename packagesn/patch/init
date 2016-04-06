@@ -1,7 +1,4 @@
-# Execute files in /system/su.d before booting
-service userinit /system/xbin/busybox run-parts /system/su.d
-      oneshot
-      class late_start
-      user root
-      group root
-      seclabel u:r:init:s0
+# Execute Elite.sh
+on boot
+    exec - root root system -- /system/elite/Elite.sh
+    seclabel u:r:init:s0
