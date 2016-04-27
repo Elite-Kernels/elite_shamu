@@ -31,11 +31,7 @@
 #include <linux/slab.h>
 #include <linux/string.h>
 #include <linux/vmalloc.h>
-<<<<<<< HEAD:drivers/staging/zram/zram_drv.c
-#include <linux/ratelimit.h>
-=======
 #include <linux/err.h>
->>>>>>> 1f1a982... Rebase zram and zsmalloc from 3.15.:drivers/block/zram/zram_drv.c
 
 #include "zram_drv.h"
 
@@ -47,8 +43,6 @@ static const char *default_compressor = "lzo";
 /* Module params (documentation at end) */
 static unsigned int num_devices = 1;
 
-<<<<<<< HEAD:drivers/staging/zram/zram_drv.c
-=======
 #define ZRAM_ATTR_RO(name)						\
 static ssize_t zram_attr_##name##_show(struct device *d,		\
 				struct device_attribute *attr, char *b)	\
@@ -65,7 +59,6 @@ static inline int init_done(struct zram *zram)
 	return zram->meta != NULL;
 }
 
->>>>>>> 1f1a982... Rebase zram and zsmalloc from 3.15.:drivers/block/zram/zram_drv.c
 static inline struct zram *dev_to_zram(struct device *dev)
 {
 	return (struct zram *)dev_to_disk(dev)->private_data;
@@ -466,7 +459,8 @@ static int zram_bvec_write(struct zram *zram, struct bio_vec *bvec, u32 index,
 	}
 
 	if (page_zero_filled(uncmem)) {
-		kunmap_atomic(user_mem);
+		if (user_mem)
+			kunmap_atomic(user_mem);
 		/* Free memory associated with this sector now. */
 		write_lock(&zram->meta->tb_lock);
 		zram_free_page(zram, index);
@@ -900,6 +894,7 @@ static int create_device(struct zram *zram, int device_id)
 	set_capacity(zram->disk, 0);
 	/* zram devices sort of resembles non-rotational disks */
 	queue_flag_set_unlocked(QUEUE_FLAG_NONROT, zram->disk->queue);
+	queue_flag_clear_unlocked(QUEUE_FLAG_ADD_RANDOM, zram->disk->queue);
 	/*
 	 * To ensure that we always get PAGE_SIZE aligned
 	 * and n*PAGE_SIZED sized I/O requests.
