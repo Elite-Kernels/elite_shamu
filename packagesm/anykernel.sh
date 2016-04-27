@@ -226,6 +226,7 @@ append_file default.prop ro.adb.secure=1 default
 # init.rc
 # backup_file init.rc;
 append_file init.rc "/system/elite" init;
+append_file init.shamu.rc "swapon_all" initshamu;
 
 # end ramdisk changes
 
