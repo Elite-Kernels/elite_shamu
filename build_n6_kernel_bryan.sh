@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Path to build your kernel
-  k=~/android/kernel/Elite_shamu
+  k=~/Android/Kernels/elite_shamu
 # Directory for the any kernel updater
   t=$k/packagesn
 # Date to add to zip
@@ -28,7 +28,7 @@
 
   z=$c-$today
 
-TOOLCHAIN=/home/brymaster5000/android/Toolchains/linaro-5.2/bin/arm-cortex-linux-gnueabi-
+TOOLCHAIN=/home/brymaster5000/Android/Toolchains/Linaro_5.2/bin/arm-cortex-linux-gnueabi-
 export ARCH=arm
 export SUBARCH=arm
 
