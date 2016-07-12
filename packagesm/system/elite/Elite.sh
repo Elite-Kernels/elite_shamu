@@ -55,8 +55,8 @@ chmod 444 /dev/frandom
   echo 0 > /sys/kernel/fast_charge/force_fast_charge
 
 #Set IO read ahead
-echo "cfq" > /sys/block/mmcblk0/queue/scheduler
-echo "1536" > /sys/block/mmcblk0/queue/read_ahead_kb
+echo "row" > /sys/block/mmcblk0/queue/scheduler
+echo "2048" > /sys/block/mmcblk0/queue/read_ahead_kb
 
 #Set CPU Min Frequencies
 echo 300000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
@@ -81,7 +81,7 @@ echo 500 > /sys/kernel/zen_decision/wake_wait_time
  # echo 0 > /sys/module/bcmdhd/parameters/wlctrl_divide
  echo 8 > /sys/module/bcmdhd/parameters/wlctrl_divide
  # echo 0 > /sys/module/xhci_hcd/parameters/wl_divide
- echo 0 > /sys/module/xhci_hcd/parameters/wl_divide
+ echo 8 > /sys/module/xhci_hcd/parameters/wl_divide
  echo 0 > /sys/module/smb135x_charger/parameters/use_wlock
 
 #Key press during suspend for long press functions
