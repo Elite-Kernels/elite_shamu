@@ -2606,7 +2606,7 @@ SYSCALL_DEFINE3(get_robust_list, int, pid,
 	}
 
 	ret = -EPERM;
-	if (!ptrace_may_access(p, PTRACE_MODE_READ_REALCREDS))
+	if (!ptrace_may_access(p, PTRACE_MODE_READ))
 		goto err_unlock;
 
 	head = p->robust_list;
